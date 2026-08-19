@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f7f2e8">
-  <meta name="description" content="Oriente les miroirs et guide le laser jusqu'au cristal en un minimum de rotations.">
+  <meta name="description" content="Oriente les miroirs, traverse les bons filtres et guide le laser coloré jusqu'au cristal en un minimum de rotations.">
   <title>Laser & Miroirs</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/polish.css">
+  <link rel="stylesheet" href="./css/features.css">
 </head>
 <body>
   <main class="game-shell">
@@ -22,48 +23,19 @@
         <button id="reset-button" class="icon-button" type="button" aria-label="Recommencer ce puzzle" title="Recommencer (R)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8 8 0 1 1 1.9 8.2"/><path d="M4 4v5h5"/></svg>
         </button>
-        <button
-          id="theme-button"
-          class="icon-button"
-          type="button"
-          aria-label="Choisir une palette"
-          aria-haspopup="true"
-          aria-expanded="false"
-          aria-controls="palette-menu"
-          title="Choisir une palette"
-        >
+        <button id="theme-button" class="icon-button" type="button" aria-label="Choisir une palette" aria-haspopup="true" aria-expanded="false" aria-controls="palette-menu" title="Choisir une palette">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3a9 9 0 0 0 0 18h1.2a1.8 1.8 0 0 0 0-3.6h-.7a1.6 1.6 0 0 1 0-3.2H15A5.8 5.8 0 0 0 20.8 9C19.8 5.5 16.3 3 12 3Z"/>
-            <circle cx="7.3" cy="10.2" r=".65"/><circle cx="10" cy="6.9" r=".65"/>
-            <circle cx="14" cy="6.9" r=".65"/><circle cx="16.7" cy="10.2" r=".65"/>
+            <circle cx="7.3" cy="10.2" r=".65"/><circle cx="10" cy="6.9" r=".65"/><circle cx="14" cy="6.9" r=".65"/><circle cx="16.7" cy="10.2" r=".65"/>
           </svg>
         </button>
-
         <div id="palette-menu" class="palette-menu" role="menu" aria-label="Palette de couleurs" hidden>
-          <button type="button" role="menuitemradio" aria-checked="true" data-theme-choice="sable">
-            <span class="palette-swatch swatch-sable" aria-hidden="true"></span>
-            <span>Sable</span>
-          </button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="ardoise">
-            <span class="palette-swatch swatch-ardoise" aria-hidden="true"></span>
-            <span>Ardoise</span>
-          </button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="sauge">
-            <span class="palette-swatch swatch-sauge" aria-hidden="true"></span>
-            <span>Sauge</span>
-          </button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="rose">
-            <span class="palette-swatch swatch-rose" aria-hidden="true"></span>
-            <span>Rose</span>
-          </button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="nuit">
-            <span class="palette-swatch swatch-nuit" aria-hidden="true"></span>
-            <span>Nuit</span>
-          </button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="crepuscule">
-            <span class="palette-swatch swatch-crepuscule" aria-hidden="true"></span>
-            <span>Crépuscule</span>
-          </button>
+          <button type="button" role="menuitemradio" aria-checked="true" data-theme-choice="sable"><span class="palette-swatch swatch-sable" aria-hidden="true"></span><span>Sable</span></button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="ardoise"><span class="palette-swatch swatch-ardoise" aria-hidden="true"></span><span>Ardoise</span></button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="sauge"><span class="palette-swatch swatch-sauge" aria-hidden="true"></span><span>Sauge</span></button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="rose"><span class="palette-swatch swatch-rose" aria-hidden="true"></span><span>Rose</span></button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="nuit"><span class="palette-swatch swatch-nuit" aria-hidden="true"></span><span>Nuit</span></button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="crepuscule"><span class="palette-swatch swatch-crepuscule" aria-hidden="true"></span><span>Crépuscule</span></button>
         </div>
       </div>
     </header>
@@ -73,6 +45,12 @@
       <button type="button" data-difficulty="normal" aria-pressed="true">Normal</button>
       <button type="button" data-difficulty="difficile" aria-pressed="false">Difficile</button>
     </div>
+
+    <div class="utility-row">
+      <button id="daily-button" class="utility-button" type="button" aria-pressed="false"><span aria-hidden="true">◇</span> Défi du jour</button>
+      <button id="stats-button" class="utility-button" type="button"><span aria-hidden="true">▥</span> Statistiques</button>
+    </div>
+    <p id="daily-badge" class="daily-badge" hidden></p>
 
     <section id="board" class="board" aria-label="Plateau de jeu">
       <div id="cells" class="cells"></div>
@@ -84,18 +62,12 @@
     </section>
 
     <section class="hud" aria-label="Score de la partie">
-      <div class="counter">
-        <span class="counter-label">Rotations</span>
-        <strong id="moves">0</strong>
-      </div>
-      <div class="counter counter--par">
-        <span class="counter-label">PAR</span>
-        <strong id="par">0</strong>
-      </div>
+      <div class="counter"><span class="counter-label">Rotations</span><strong id="moves">0</strong></div>
+      <div class="counter counter--par"><span class="counter-label">PAR</span><strong id="par">0</strong></div>
     </section>
 
     <button id="new-button" class="primary-button" type="button">Nouveau puzzle</button>
-    <p class="micro-help">Touchez un miroir pour le faire pivoter. <span class="desktop-help">N : nouveau · R : recommencer</span></p>
+    <p class="micro-help">Les filtres ne laissent passer que leur couleur. Les miroirs marqués d’un cadenas sont fixes. <span class="desktop-help">N : nouveau · R : recommencer</span></p>
   </main>
 
   <dialog id="win-dialog" class="win-dialog">
@@ -103,14 +75,26 @@
     <h2 id="win-title">Cristal atteint !</h2>
     <p id="win-result" class="win-result"></p>
     <p id="win-detail" class="win-detail"></p>
-    <div class="dialog-actions">
+    <div class="dialog-actions dialog-actions--three">
+      <button id="win-solution" class="secondary-button" type="button">Solution optimale</button>
       <button id="win-close" class="secondary-button" type="button">Voir le plateau</button>
       <button id="win-new" class="primary-button" type="button">Nouveau puzzle</button>
     </div>
   </dialog>
 
-  <div id="status" class="sr-only" role="status" aria-live="polite"></div>
+  <dialog id="stats-dialog" class="win-dialog stats-dialog">
+    <h2>Statistiques</h2>
+    <div class="stats-grid">
+      <div><span>Puzzles terminés</span><strong id="stats-total">0</strong></div>
+      <div><span>Au PAR</span><strong id="stats-perfect">—</strong></div>
+      <div><span>Écart moyen</span><strong id="stats-delta">—</strong></div>
+      <div><span>Série quotidienne</span><strong id="stats-streak">0</strong></div>
+      <div><span>Meilleure série</span><strong id="stats-best-streak">0</strong></div>
+    </div>
+    <button id="stats-close" class="primary-button" type="button">Fermer</button>
+  </dialog>
 
+  <div id="status" class="sr-only" role="status" aria-live="polite"></div>
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
