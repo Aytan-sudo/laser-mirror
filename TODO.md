@@ -1,27 +1,24 @@
-# Pistes après le MVP
+# Pistes après la v1.2
 
-Le MVP doit rester centré sur une seule règle : orienter des miroirs fixes pour atteindre le cristal. Les éléments ci-dessous sont volontairement hors v1.
+La v1.2 couvre désormais le cœur du jeu, le défi quotidien, les statistiques, la solution optimale, les miroirs verrouillés et les filtres colorés.
 
-## Prochaines améliorations naturelles
+## Améliorations naturelles
 
-- défi quotidien avec seed dérivée de la date ;
 - URL de partage contenant seed + difficulté ;
-- statistiques par difficulté : parties, PAR atteints, écart moyen au PAR ;
-- historique/replay d'une solution ;
+- historique détaillé par difficulté ;
 - indice progressif basé sur une solution optimale ;
 - calibration de difficulté à partir de parties humaines plutôt que des seuls indicateurs du solver ;
-- icônes PWA rasterisées 192/512 pour une compatibilité maximale des écrans d'accueil.
+- icônes PWA rasterisées 192/512 pour une compatibilité maximale des écrans d'accueil ;
+- option de partage du résultat du défi quotidien.
 
-## Éléments de puzzle à n'ajouter qu'après validation du cœur
+## Éléments de puzzle pour plus tard
 
-- miroir verrouillé ;
 - séparateur de rayon ;
-- absorbeur ;
-- cristaux et filtres de couleur ;
-- prisme ;
+- plusieurs cristaux à éclairer simultanément ;
+- prisme ou changement de couleur ;
 - téléporteur ;
+- miroir escamotable ;
 - plusieurs sources laser ;
-- plusieurs cibles ;
 - interrupteurs.
 
 Chaque nouvel élément devra apporter une décision nouvelle au joueur, pas seulement augmenter le nombre de symboles sur la grille.
