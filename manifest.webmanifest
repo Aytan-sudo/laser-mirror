@@ -1,0 +1,19 @@
+{
+  "name": "Laser & Miroirs",
+  "short_name": "Laser",
+  "description": "Oriente les miroirs et guide le laser jusqu'au cristal en un minimum de rotations.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3f8",
+  "theme_color": "#eef3f8",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
