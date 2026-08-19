@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eef3f8">
+  <meta name="description" content="Oriente les miroirs et guide le laser jusqu'au cristal en un minimum de rotations.">
+  <title>Laser & Miroirs</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Puzzle optique</p>
+        <h1>Laser & Miroirs</h1>
+      </div>
+      <div class="topbar-actions">
+        <button id="reset-button" class="icon-button" type="button" aria-label="Recommencer ce puzzle" title="Recommencer (R)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8 8 0 1 1 1.9 8.2"/><path d="M4 4v5h5"/></svg>
+        </button>
+        <button id="theme-button" class="icon-button" type="button" aria-label="Changer de thème" title="Changer de thème">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="difficulty" class="difficulty" role="group" aria-label="Difficulté">
+      <button type="button" data-difficulty="facile" aria-pressed="false">Facile</button>
+      <button type="button" data-difficulty="normal" aria-pressed="true">Normal</button>
+      <button type="button" data-difficulty="difficile" aria-pressed="false">Difficile</button>
+    </div>
+
+    <section id="board" class="board" aria-label="Plateau de jeu">
+      <div id="cells" class="cells"></div>
+      <svg class="laser-layer" viewBox="0 0 6 6" preserveAspectRatio="none" aria-hidden="true">
+        <polyline id="beam-glow" class="beam-glow" points=""></polyline>
+        <polyline id="beam" class="beam" points=""></polyline>
+        <circle id="emitter" class="emitter" cx="0" cy="0" r="0.09"></circle>
+      </svg>
+    </section>
+
+    <section class="hud" aria-label="Score de la partie">
+      <div class="counter">
+        <span class="counter-label">Rotations</span>
+        <strong id="moves">0</strong>
+      </div>
+      <div class="counter counter--par">
+        <span class="counter-label">PAR</span>
+        <strong id="par">0</strong>
+      </div>
+    </section>
+
+    <button id="new-button" class="primary-button" type="button">Nouveau puzzle</button>
+    <p class="micro-help">Touchez un miroir pour le faire pivoter. <span class="desktop-help">N : nouveau · R : recommencer</span></p>
+  </main>
+
+  <dialog id="win-dialog" class="win-dialog">
+    <div class="win-mark" aria-hidden="true">◆</div>
+    <h2 id="win-title">Cristal atteint !</h2>
+    <p id="win-result" class="win-result"></p>
+    <p id="win-detail" class="win-detail"></p>
+    <div class="dialog-actions">
+      <button id="win-close" class="secondary-button" type="button">Voir le plateau</button>
+      <button id="win-new" class="primary-button" type="button">Nouveau puzzle</button>
+    </div>
+  </dialog>
+
+  <div id="status" class="sr-only" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
