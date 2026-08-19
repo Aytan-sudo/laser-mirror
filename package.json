@@ -1,10 +1,10 @@
 {
   "name": "laser-mirror",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --check js/app.js && node --check js/engine.js && node --check js/generator.js"
+    "check": "node --check js/app.js && node --check js/engine.js && node --check js/generator.js && node --check js/rng.js && node --check js/storage.js"
   }
 }

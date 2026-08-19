@@ -8,8 +8,8 @@
   <title>Laser & Miroirs</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/polish.css">
+  <link rel="stylesheet" href="./css/palettes.css">
+  <link rel="stylesheet" href="./css/board.css">
   <link rel="stylesheet" href="./css/features.css">
 </head>
 <body>
@@ -67,7 +67,12 @@
     </section>
 
     <button id="new-button" class="primary-button" type="button">Nouveau puzzle</button>
-    <p class="micro-help">Les filtres ne laissent passer que leur couleur. Les miroirs marqués d’un cadenas sont fixes. <span class="desktop-help">N : nouveau · R : recommencer</span></p>
+
+    <div class="seed-row">
+      <button id="share-button" class="utility-button" type="button"><span aria-hidden="true">⧉</span> <span class="share-text">Partager</span></button>
+      <code id="seed-label" class="seed-label"></code>
+    </div>
+    <p class="micro-help">Les filtres ne laissent passer que leur couleur. Un cadenas fige le miroir, sur le bon chemin comme ailleurs. <span class="desktop-help">N : nouveau · R : recommencer</span></p>
   </main>
 
   <dialog id="win-dialog" class="win-dialog">

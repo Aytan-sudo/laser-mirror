@@ -28,6 +28,8 @@ const els = {
   paletteMenu: document.querySelector('#palette-menu'),
   newPuzzle: document.querySelector('#new-button'),
   daily: document.querySelector('#daily-button'),
+  share: document.querySelector('#share-button'),
+  seedLabel: document.querySelector('#seed-label'),
   stats: document.querySelector('#stats-button'),
   dailyBadge: document.querySelector('#daily-badge'),
   winDialog: document.querySelector('#win-dialog'),
@@ -67,8 +69,7 @@ function init() {
   bindEvents();
   renderDifficulty();
 
-  const saved = loadValue('current-game');
-  if (!restoreGame(saved)) newPuzzle();
+  if (!openSharedPuzzle() && !restoreGame(loadValue('current-game'))) newPuzzle();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -100,6 +101,7 @@ function bindEvents() {
   els.newPuzzle.addEventListener('click', newPuzzle);
   els.daily.addEventListener('click', loadDailyPuzzle);
   els.stats.addEventListener('click', openStats);
+  els.share.addEventListener('click', sharePuzzle);
   els.statsClose.addEventListener('click', () => els.statsDialog.close());
 
   els.winNew.addEventListener('click', () => {
@@ -134,6 +136,7 @@ function bindEvents() {
       return;
     }
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (document.querySelector('dialog[open]')) return;
     if (event.key.toLowerCase() === 'n' && !isTypingTarget(event.target)) {
       event.preventDefault();
       newPuzzle();
@@ -169,14 +172,21 @@ function loadDailyPuzzle() {
   announce(`Défi du jour ${formatDate(date)}.`);
 }
 
-function loadPuzzle(seed, difficulty, restored = null) {
+function loadPuzzle(seed, difficulty, restored = null, retriesLeft = 3) {
   let puzzle;
   try {
     puzzle = generatePuzzle(seed, difficulty);
   } catch (error) {
     console.error(error);
-    if (!restored) return loadPuzzle(randomSeed(), difficulty);
-    return false;
+    if (restored || retriesLeft <= 0) return false;
+    // Une seed de secours ne produit pas la grille du jour : on quitte le mode
+    // plutôt que d'afficher un puzzle libre sous l'étiquette du défi.
+    if (state.mode === 'daily') {
+      state.mode = 'random';
+      state.dailyDate = null;
+      announce("Le défi du jour n'a pas pu être engendré, voici un puzzle libre.");
+    }
+    return loadPuzzle(randomSeed(), difficulty, null, retriesLeft - 1);
   }
 
   state = {
@@ -191,19 +201,26 @@ function loadPuzzle(seed, difficulty, restored = null) {
     demonstrating: false,
   };
 
-  if (state.mask < 0 || state.mask >= (1 << puzzle.mirrors.length)) {
+  // Un miroir verrouillé garde toujours son orientation d'origine : une partie
+  // restaurée qui prétend le contraire est corrompue.
+  const lockedMask = puzzle.mirrors.reduce((mask, mirror, index) => (
+    mirror.locked ? mask | (1 << index) : mask
+  ), 0);
+  const inconsistent = (state.mask & lockedMask) !== (puzzle.initialMask & lockedMask);
+  if (state.mask < 0 || state.mask >= (1 << puzzle.mirrors.length) || inconsistent) {
     state.mask = puzzle.initialMask;
     state.moves = 0;
   }
 
   renderPuzzle();
   renderMode();
+  syncUrl();
   persistGame();
   return true;
 }
 
 function restoreGame(saved) {
-  if (!saved || saved.version !== 2 || saved.won) return false;
+  if (!saved || saved.version !== 3 || saved.won) return false;
   if (!DIFFICULTIES[saved.difficulty] || typeof saved.seed !== 'string') return false;
   if (!Number.isInteger(saved.mask) || !Number.isInteger(saved.moves) || saved.moves < 0) return false;
   if (saved.mode === 'daily' && saved.dailyDate !== todayKey()) return false;
@@ -362,12 +379,79 @@ function renderMode() {
   els.daily.setAttribute('aria-pressed', String(daily));
   els.dailyBadge.hidden = !daily;
   if (daily) els.dailyBadge.textContent = `Défi du ${formatDate(state.dailyDate)}`;
+
+  const label = daily ? `Défi du jour · ${state.dailyDate}` : `Seed ${state.puzzle.seed}`;
+  els.seedLabel.textContent = label;
+  els.share.setAttribute('aria-label', `Copier le lien de ce puzzle (${label})`);
+}
+
+// L'adresse décrit toujours la grille affichée : recharger la page redonne le
+// même puzzle, et partager le lien se réduit à copier l'adresse.
+function puzzleUrl() {
+  const url = new URL(location.href);
+  url.search = state.mode === 'daily'
+    ? new URLSearchParams({ jour: state.dailyDate })
+    : new URLSearchParams({ seed: state.puzzle.seed, niveau: state.difficulty });
+  return url.toString();
+}
+
+function syncUrl() {
+  try {
+    history.replaceState(null, '', puzzleUrl());
+  } catch {
+    // Protocole file:// ou navigation restreinte : le jeu marche sans l'URL.
+  }
+}
+
+function openSharedPuzzle() {
+  const params = new URLSearchParams(location.search);
+  const day = params.get('jour');
+  if (day && /^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    // Un lien du jour rouvert plus tard redonne la même grille, mais hors mode
+    // quotidien : la série ne se nourrit pas de dates choisies à la main.
+    const today = day === todayKey();
+    state.mode = today ? 'daily' : 'random';
+    state.dailyDate = today ? day : null;
+    state.difficulty = 'normal';
+    renderDifficulty();
+    return loadPuzzle(`daily-${day}`, 'normal');
+  }
+
+  const seed = params.get('seed');
+  const niveau = params.get('niveau');
+  if (!seed || seed.length > 64 || !DIFFICULTIES[niveau]) return false;
+  state.mode = 'random';
+  state.dailyDate = null;
+  state.difficulty = niveau;
+  renderDifficulty();
+  return loadPuzzle(seed, niveau);
+}
+
+async function sharePuzzle() {
+  const url = puzzleUrl();
+  try {
+    await navigator.clipboard.writeText(url);
+    flashShare('Lien copié !');
+    announce('Lien du puzzle copié dans le presse-papiers.');
+  } catch {
+    flashShare('Copie refusée');
+    announce(`Lien du puzzle : ${url}`);
+  }
+}
+
+let shareTimer = 0;
+function flashShare(message) {
+  const label = els.share.querySelector('.share-text');
+  if (!label) return;
+  label.textContent = message;
+  window.clearTimeout(shareTimer);
+  shareTimer = window.setTimeout(() => { label.textContent = 'Partager'; }, 1800);
 }
 
 function persistGame() {
   if (!state.puzzle || state.won || state.demonstrating) return;
   saveValue('current-game', {
-    version: 2,
+    version: 3,
     seed: state.puzzle.seed,
     difficulty: state.difficulty,
     mode: state.mode,

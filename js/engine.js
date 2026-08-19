@@ -34,29 +34,45 @@ export function maskFromOrientations(mirrors) {
   );
 }
 
-export function traceLaser(puzzle, mask = puzzle.initialMask) {
-  const { size, entry, target, mirrors, filters = [] } = puzzle;
+// Index des cases occupées, à plat : le générateur trace des dizaines de
+// milliers de configurations, et une clé « ligne,colonne » par case coûterait
+// une chaîne à chaque pas de rayon.
+export function compilePuzzle(puzzle) {
+  const cells = puzzle.size * puzzle.size;
+  const mirrorAt = new Int8Array(cells).fill(-1);
+  const filterAt = new Array(cells).fill(null);
+  puzzle.mirrors.forEach((mirror, index) => { mirrorAt[mirror.row * puzzle.size + mirror.col] = index; });
+  for (const filter of puzzle.filters ?? []) filterAt[filter.row * puzzle.size + filter.col] = filter;
+  return { mirrorAt, filterAt };
+}
+
+export function traceLaser(puzzle, mask = puzzle.initialMask, compiled = compilePuzzle(puzzle)) {
+  const { size, entry, target } = puzzle;
+  const { mirrorAt, filterAt } = compiled;
   const laserColor = puzzle.laserColor ?? target.color ?? 'red';
-  const mirrorAt = new Map(mirrors.map((mirror, index) => [`${mirror.row},${mirror.col}`, index]));
-  const filterAt = new Map(filters.map((filter) => [`${filter.row},${filter.col}`, filter]));
 
   let { row, col, direction } = entryState(size, entry);
   let currentDirection = direction;
   const points = [entryPoint(size, entry)];
   const visitedCells = [];
-  const seenStates = new Set();
+
+  // Avec seulement des miroirs `/` et `\` la trajectoire est réversible, donc
+  // sans boucle possible. Le garde-fou reste utile pour les éléments à venir
+  // (téléporteur, séparateur) qui, eux, peuvent en créer : au-delà d'un passage
+  // par état possible (case × direction), le rayon boucle forcément.
+  const maxSteps = size * size * 4;
+  let steps = 0;
 
   while (inside(size, row, col)) {
-    const stateKey = `${row},${col},${currentDirection.name}`;
-    if (seenStates.has(stateKey)) {
+    if (steps > maxSteps) {
       return { hit: false, loop: true, blocked: false, color: laserColor, points, visitedCells, exit: null };
     }
-    seenStates.add(stateKey);
+    steps += 1;
 
     visitedCells.push({ row, col });
     points.push({ x: col + 0.5, y: row + 0.5 });
 
-    const filter = filterAt.get(`${row},${col}`);
+    const filter = filterAt[row * size + col];
     if (filter && filter.color !== laserColor) {
       return {
         hit: false,
@@ -84,8 +100,8 @@ export function traceLaser(puzzle, mask = puzzle.initialMask) {
       };
     }
 
-    const mirrorIndex = mirrorAt.get(`${row},${col}`);
-    if (mirrorIndex !== undefined) {
+    const mirrorIndex = mirrorAt[row * size + col];
+    if (mirrorIndex >= 0) {
       currentDirection = reflect(currentDirection, orientationAt(mask, mirrorIndex));
     }
 
@@ -107,6 +123,7 @@ export function traceLaser(puzzle, mask = puzzle.initialMask) {
 
 export function solvePuzzle(puzzle, options = {}) {
   const maxOptimalMasks = options.maxOptimalMasks ?? 16;
+  const compiled = compilePuzzle(puzzle);
   const initialMask = puzzle.initialMask;
   const mutableIndexes = puzzle.mirrors
     .map((mirror, index) => (mirror.locked ? -1 : index))
@@ -124,7 +141,7 @@ export function solvePuzzle(puzzle, options = {}) {
       }
       const candidateMask = initialMask ^ toggleMask;
       explored += 1;
-      if (!traceLaser(puzzle, candidateMask).hit) return;
+      if (!traceLaser(puzzle, candidateMask, compiled).hit) return;
       optimalCount += 1;
       if (optimalMasks.length < maxOptimalMasks) optimalMasks.push(candidateMask);
     });
@@ -192,12 +209,11 @@ function entryPoint(size, entry) {
   }
 }
 
-function exitPoint(size, row, col, direction) {
+function exitPoint(size, row, col) {
   if (col < 0) return { x: 0, y: row + 0.5 };
   if (col >= size) return { x: size, y: row + 0.5 };
   if (row < 0) return { x: col + 0.5, y: 0 };
-  if (row >= size) return { x: col + 0.5, y: size };
-  return { x: col + 0.5 - direction.dx * 0.5, y: row + 0.5 - direction.dy * 0.5 };
+  return { x: col + 0.5, y: size };
 }
 
 function directionFromDelta(dx, dy) {

@@ -1,16 +1,5 @@
-/* Laser & Miroirs v1.1 / v1.2 : modes, statistiques et nouvelles pièces. */
-
-:root {
-  --beam-red: #cf5c55;
-  --beam-red-hot: #e58a82;
-  --beam-red-glow: rgba(207, 92, 85, .22);
-  --beam-blue: #4f82b8;
-  --beam-blue-hot: #82add6;
-  --beam-blue-glow: rgba(79, 130, 184, .22);
-  --beam-yellow: #c68c22;
-  --beam-yellow-hot: #e4bd62;
-  --beam-yellow-glow: rgba(198, 140, 34, .22);
-}
+/* Laser & Miroirs — éléments optiques et écrans annexes :
+   filtres colorés, miroirs verrouillés, défi du jour, statistiques, partage. */
 
 .utility-row {
   display: grid;
@@ -37,7 +26,10 @@
   background: color-mix(in srgb, var(--panel-soft) 82%, var(--panel));
 }
 
-.utility-button:active { transform: translateY(1px); }
+.utility-button:active {
+  transform: translateY(1px);
+}
+
 .utility-button.is-active {
   color: var(--accent);
   background: var(--accent-soft);
@@ -58,36 +50,51 @@
 }
 
 /* Le rayon garde la même douceur graphique, mais la couleur devient une règle. */
+
 .board[data-laser-color="red"] {
   --active-beam: var(--beam-red);
   --active-beam-hot: var(--beam-red-hot);
   --active-beam-glow: var(--beam-red-glow);
 }
+
 .board[data-laser-color="blue"] {
   --active-beam: var(--beam-blue);
   --active-beam-hot: var(--beam-blue-hot);
   --active-beam-glow: var(--beam-blue-glow);
 }
+
 .board[data-laser-color="yellow"] {
   --active-beam: var(--beam-yellow);
   --active-beam-hot: var(--beam-yellow-hot);
   --active-beam-glow: var(--beam-yellow-glow);
 }
 
-.board .beam-glow { stroke: var(--active-beam); opacity: .2; }
+.board .beam-glow {
+  stroke: var(--active-beam);
+  opacity: .2;
+}
+
 .board .beam {
   stroke: var(--active-beam);
   filter: drop-shadow(0 0 1px var(--active-beam-hot));
 }
+
 .board .emitter {
   fill: var(--active-beam-hot);
   stroke: var(--active-beam);
   filter: drop-shadow(0 0 2px var(--active-beam));
 }
-.board.is-hit .beam { stroke: var(--active-beam-hot); }
-.board.is-blocked .beam { opacity: .86; }
+
+.board.is-hit .beam {
+  stroke: var(--active-beam-hot);
+}
+
+.board.is-blocked .beam {
+  opacity: .86;
+}
 
 /* Filtres colorés. La lettre évite de rendre la règle dépendante de la seule couleur. */
+
 .filter-cell {
   z-index: 4;
   display: grid;
@@ -110,14 +117,34 @@
   line-height: 1;
 }
 
-.filter-cell[data-filter-color="red"] { color: var(--beam-red); }
-.filter-cell[data-filter-color="blue"] { color: var(--beam-blue); }
-.filter-cell[data-filter-color="yellow"] { color: var(--beam-yellow); }
+.filter-cell[data-filter-color="red"] {
+  color: var(--beam-red);
+}
+
+.filter-cell[data-filter-color="blue"] {
+  color: var(--beam-blue);
+}
+
+.filter-cell[data-filter-color="yellow"] {
+  color: var(--beam-yellow);
+}
 
 /* Le cristal reprend la couleur exigée tout en gardant son rendu de pierre polie. */
-.target-cell[data-color="red"] { --target-color: var(--beam-red); --target-light: #efb3ad; }
-.target-cell[data-color="blue"] { --target-color: var(--beam-blue); --target-light: #b8d1e8; }
-.target-cell[data-color="yellow"] { --target-color: var(--beam-yellow); --target-light: #ead59e; }
+
+.target-cell[data-color="red"] {
+  --target-color: var(--beam-red);
+  --target-light: #efb3ad;
+}
+
+.target-cell[data-color="blue"] {
+  --target-color: var(--beam-blue);
+  --target-light: #b8d1e8;
+}
+
+.target-cell[data-color="yellow"] {
+  --target-color: var(--beam-yellow);
+  --target-light: #ead59e;
+}
 
 .target-cell .crystal {
   border-color: color-mix(in srgb, var(--target-light) 76%, var(--target-color));
@@ -139,9 +166,18 @@
 }
 
 /* Miroir verrouillé : même objet, mais son petit cadenas est dessiné en CSS. */
-.mirror--locked { cursor: default; }
-.mirror--locked::before { opacity: .84; }
-.mirror--locked .mirror-bar { opacity: .8; }
+
+.mirror--locked {
+  cursor: default;
+}
+
+.mirror--locked::before {
+  opacity: .84;
+}
+
+.mirror--locked .mirror-bar {
+  opacity: .8;
+}
 
 .mirror-lock {
   position: absolute;
@@ -169,14 +205,27 @@
 }
 
 /* Statistiques et dialogue de victoire enrichi. */
+
 .dialog-actions--three {
   grid-template-columns: 1fr 1fr;
 }
-.dialog-actions--three #win-new { grid-column: 1 / -1; }
 
-.stats-dialog { width: min(calc(100% - 28px), 27rem); }
-.stats-dialog h2 { margin-bottom: 16px; }
-.stats-dialog > .primary-button { width: 100%; margin-top: 14px; }
+.dialog-actions--three #win-new {
+  grid-column: 1 / -1;
+}
+
+.stats-dialog {
+  width: min(calc(100% - 28px), 27rem);
+}
+
+.stats-dialog h2 {
+  margin-bottom: 16px;
+}
+
+.stats-dialog > .primary-button {
+  width: 100%;
+  margin-top: 14px;
+}
 
 .stats-grid {
   display: grid;
@@ -197,7 +246,10 @@
   text-align: left;
 }
 
-.stats-grid > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.stats-grid > div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .stats-grid span {
   color: var(--muted);
   font-size: .72rem;
@@ -205,6 +257,7 @@
   text-transform: uppercase;
   letter-spacing: .055em;
 }
+
 .stats-grid strong {
   color: var(--text);
   font-size: 1.45rem;
@@ -212,12 +265,62 @@
 }
 
 @media (max-width: 380px), (max-height: 700px) {
-  .utility-button { min-height: 34px; font-size: .76rem; }
-  .daily-badge { font-size: .68rem; }
-  .filter-disc { width: 43%; }
-  .micro-help { font-size: .68rem; }
+  .utility-button {
+    min-height: 34px;
+    font-size: .76rem;
+  }
+
+  .daily-badge {
+    font-size: .68rem;
+  }
+
+  .filter-disc {
+    width: 43%;
+  }
+
+  .micro-help {
+    font-size: .68rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .utility-button { transition-duration: 1ms; }
+  .utility-button {
+    transition-duration: 1ms;
+  }
+}
+
+/* ------------------------------------------------- Partage et seed visible */
+.seed-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: -2px;
+}
+
+.seed-row .utility-button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: .74rem;
+}
+
+.seed-label {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: .68rem;
+  letter-spacing: .01em;
+  color: var(--muted);
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px), (max-height: 700px) {
+  .seed-row { gap: 8px; }
+  .seed-label { font-size: .64rem; padding: 2px 8px; }
 }

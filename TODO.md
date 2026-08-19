@@ -1,10 +1,9 @@
-# Pistes après la v1.2
+# Pistes après la v1.3
 
-La v1.2 couvre désormais le cœur du jeu, le défi quotidien, les statistiques, la solution optimale, les miroirs verrouillés et les filtres colorés.
+La v1.3 couvre le cœur du jeu, le défi quotidien, les statistiques, la solution optimale, les miroirs verrouillés, les filtres colorés, la calibration du PAR par les filtres et le partage par URL.
 
 ## Améliorations naturelles
 
-- URL de partage contenant seed + difficulté ;
 - historique détaillé par difficulté ;
 - indice progressif basé sur une solution optimale ;
 - calibration de difficulté à partir de parties humaines plutôt que des seuls indicateurs du solver ;

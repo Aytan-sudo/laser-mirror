@@ -1,0 +1,740 @@
+/* Laser & Miroirs — géométrie et habillage du plateau.
+   Toutes les couleurs viennent des variables de palettes.css : ce fichier ne
+   fixe aucune teinte en dur. */
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: safe center;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+}
+
+.game-shell {
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  line-height: 1;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.icon-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-button:active {
+  transform: translateY(1px);
+}
+
+.icon-button:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.difficulty button:focus-visible,
+.mirror:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 46%, transparent);
+  outline-offset: 2px;
+}
+
+.difficulty {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.difficulty button {
+  border: 0;
+  padding: 8px 6px;
+  background: transparent;
+  font-size: 0.84rem;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.difficulty button:hover {
+  color: var(--text);
+}
+
+.board {
+  --size: 6;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--border-vivid);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cells {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--size), 1fr);
+  grid-template-rows: repeat(var(--size), 1fr);
+}
+
+.cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.mirror {
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--metal);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mirror::before {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+}
+
+.mirror:active::before {
+  transform: scale(0.96);
+}
+
+.mirror-bar {
+  position: relative;
+  z-index: 1;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, var(--metal-light), var(--metal) 42%, var(--metal) 70%, var(--metal-light));
+  transition: transform 140ms ease;
+}
+
+.mirror[data-orientation="slash"] .mirror-bar {
+  transform: rotate(-45deg);
+}
+
+.mirror[data-orientation="backslash"] .mirror-bar {
+  transform: rotate(45deg);
+}
+
+.target-cell {
+  z-index: 4;
+  display: grid;
+  place-items: center;
+}
+
+.crystal {
+  aspect-ratio: 1;
+  transform: rotate(45deg);
+  border: 2px solid var(--crystal-light);
+  border-radius: 18% 42% 18% 42%;
+  box-shadow: 0 0 12px var(--crystal-glow), inset 0 0 7px rgba(255, 255, 255, 0.55);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.board.is-hit .crystal {
+  box-shadow: 0 0 20px 5px var(--crystal-glow), inset 0 0 9px rgba(255, 255, 255, 0.7);
+}
+
+.laser-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.beam,
+.beam-glow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.beam-glow {
+  stroke: var(--laser-glow);
+}
+
+.beam {
+  stroke: var(--laser);
+}
+
+.emitter {
+  fill: var(--laser-hot);
+  stroke: var(--laser);
+  stroke-width: 0.06;
+}
+
+.board.is-loop .beam {
+  stroke-dasharray: 0.13 0.08;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.counter-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.counter strong {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 1px solid var(--accent);
+  color: var(--accent-text);
+}
+
+.primary-button:active {
+  transform: translateY(1px);
+}
+
+.secondary-button {
+  border: 1px solid var(--border-vivid);
+  color: var(--text);
+}
+
+.micro-help {
+  margin: -3px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.4;
+}
+
+.win-dialog {
+  width: min(calc(100% - 28px), 25rem);
+  border: 1px solid var(--border);
+  padding: 22px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.32);
+  text-align: center;
+}
+
+.win-dialog::backdrop {
+  background: rgba(7, 15, 24, 0.52);
+}
+
+.win-mark {
+  margin: 0 auto 8px;
+  color: var(--crystal);
+  font-size: 2.4rem;
+}
+
+.win-dialog h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.win-result {
+  margin: 10px 0 4px;
+  font-size: 1.05rem;
+  font-weight: 760;
+}
+
+.win-detail {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 380px), (max-height: 700px) {
+  body {
+    padding-top: max(9px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .game-shell {
+    gap: 8px;
+  }
+
+  .eyebrow {
+    display: none;
+  }
+
+  h1 {
+    font-size: 1.65rem;
+  }
+
+  .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .difficulty button {
+    padding-block: 6px;
+  }
+
+  .counter {
+    padding-block: 7px;
+  }
+}
+
+@media (pointer: coarse) {
+  .desktop-help {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+*::before,
+*::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ Sable */
+
+/* --------------------------------------------------------------- Ardoise */
+
+/* ------------------------------------------------------------------ Sauge */
+
+/* ------------------------------------------------------------------- Rose */
+
+/* ------------------------------------------------------------------- Nuit */
+
+/* ------------------------------------------------------------- Crépuscule */
+
+/* Même respiration et même typographie que les autres petits jeux. */
+
+body {
+  padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+}
+
+.game-shell {
+  width: min(100%, 30rem);
+  gap: 11px;
+}
+
+.eyebrow {
+  display: none;
+}
+
+h1 {
+  font-size: clamp(1.9rem, 8vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.topbar {
+  gap: 10px;
+}
+
+.topbar-actions {
+  position: relative;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-color: var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 52%, transparent);
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+
+.icon-button:hover {
+  border-color: var(--border-vivid);
+  background: color-mix(in srgb, var(--panel) 80%, var(--panel-soft));
+}
+
+/* -------------------------------------------------------- choix de palette */
+
+.palette-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: min(18rem, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--text) 18%, transparent);
+}
+
+.palette-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 680;
+  text-align: left;
+  cursor: pointer;
+}
+
+.palette-menu button:hover {
+  background: var(--panel-soft);
+}
+
+.palette-menu button.is-active {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.palette-menu button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 44%, transparent);
+  outline-offset: 1px;
+}
+
+.palette-swatch {
+  flex: 0 0 auto;
+  width: 25px;
+  height: 25px;
+  border: 1px solid color-mix(in srgb, var(--text) 13%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, white 30%, transparent);
+}
+
+.swatch-sable {
+  background: conic-gradient(#f7f2e8 0 34%, #c1712c 34% 67%, #5796a7 67%);
+}
+
+.swatch-ardoise {
+  background: conic-gradient(#edf1f4 0 34%, #607f98 34% 67%, #579caf 67%);
+}
+
+.swatch-sauge {
+  background: conic-gradient(#f1f2e9 0 34%, #71835b 34% 67%, #669ba0 67%);
+}
+
+.swatch-rose {
+  background: conic-gradient(#f8eff1 0 34%, #a85b70 34% 67%, #6c9ba9 67%);
+}
+
+.swatch-nuit {
+  background: conic-gradient(#16120e 0 34%, #e0a44e 34% 67%, #78aab5 67%);
+}
+
+.swatch-crepuscule {
+  background: conic-gradient(#19151b 0 34%, #b8899a 34% 67%, #74a7ae 67%);
+}
+
+/* Le sélecteur devient une commande segmentée discrète plutôt qu'un cadre. */
+
+.difficulty {
+  gap: 4px;
+  padding: 4px;
+  border-color: transparent;
+  background: var(--panel-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.difficulty button {
+  border-radius: 9px;
+  color: var(--muted);
+  transition: color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.difficulty button.is-active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+/* Le plateau reçoit un cadre rappelant le plateau de 2048.
+   La grille reste au même endroit : aucun impact sur les coordonnées du laser. */
+
+.board {
+  border-color: color-mix(in srgb, var(--board-rim) 70%, var(--border));
+  border-radius: 16px;
+  background: var(--panel-soft);
+  box-shadow:
+    0 0 0 5px var(--board-rim),
+    var(--shadow);
+}
+
+.cell {
+  border-right-color: color-mix(in srgb, var(--border) 58%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--border) 58%, transparent);
+  background: var(--cell);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
+}
+
+.cell:nth-child(even) {
+  background: var(--cell-alt);
+}
+
+/* Le miroir devient un petit objet mat posé sur le plateau. */
+
+.mirror::before {
+  width: 56%;
+  height: 56%;
+  border: 1px solid color-mix(in srgb, var(--mirror-disc-edge) 66%, transparent);
+  background: var(--mirror-disc);
+  box-shadow:
+    0 2px 5px color-mix(in srgb, var(--text) 9%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 38%, transparent);
+  transition: transform 110ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.mirror:hover::before {
+  border-color: color-mix(in srgb, var(--mirror-disc-edge) 85%, transparent);
+  background: color-mix(in srgb, var(--mirror-disc) 88%, var(--panel));
+  box-shadow:
+    0 3px 7px color-mix(in srgb, var(--text) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 42%, transparent);
+}
+
+.mirror-bar {
+  width: 62%;
+  height: 7%;
+  min-height: 4px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--metal-light) 86%, var(--panel)),
+    var(--metal) 46%,
+    color-mix(in srgb, var(--metal) 86%, var(--text)) 66%,
+    color-mix(in srgb, var(--metal-light) 82%, var(--panel))
+  );
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 16%, transparent);
+}
+
+/* Cristal moins néon, davantage pierre polie. */
+
+.crystal {
+  width: 36%;
+  border: 1px solid color-mix(in srgb, var(--crystal-light) 78%, var(--crystal));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--crystal-light) 88%, white),
+    var(--crystal) 48%,
+    color-mix(in srgb, var(--crystal) 76%, #315d68)
+  );
+  box-shadow:
+    0 0 8px var(--crystal-glow),
+    inset 0 1px 4px color-mix(in srgb, white 52%, transparent);
+}
+
+.board.is-hit .crystal {
+  transform: rotate(45deg) scale(1.12);
+  box-shadow:
+    0 0 14px 3px var(--crystal-glow),
+    inset 0 1px 5px color-mix(in srgb, white 58%, transparent);
+}
+
+/* Le rayon reste immédiatement lisible mais cesse d'être un tube néon. */
+
+.beam-glow {
+  stroke-width: 7px;
+  filter: blur(1.5px);
+  opacity: 0.8;
+}
+
+.beam {
+  stroke-width: 2.6px;
+  filter: drop-shadow(0 0 1px var(--laser-hot));
+}
+
+.emitter {
+  r: 0.075;
+  filter: drop-shadow(0 0 2px var(--laser));
+}
+
+/* HUD et boutons : surfaces douces, peu de traits. */
+
+.hud {
+  gap: 8px;
+}
+
+.counter {
+  padding: 10px 13px;
+  border-color: transparent;
+  background: var(--panel-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 62%, transparent);
+}
+
+.counter-label {
+  font-weight: 720;
+  letter-spacing: 0.07em;
+}
+
+.counter strong {
+  font-weight: 780;
+  color: var(--text);
+}
+
+.counter--par strong {
+  color: var(--accent);
+}
+
+.primary-button,
+.secondary-button {
+  border-radius: 12px;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease, box-shadow 120ms ease;
+}
+
+.primary-button {
+  border-color: transparent;
+  background: var(--accent);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.primary-button:hover {
+  filter: none;
+  background: color-mix(in srgb, var(--accent) 90%, var(--text));
+}
+
+.secondary-button {
+  border-color: transparent;
+  background: var(--panel-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 66%, transparent);
+}
+
+.secondary-button:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--panel-soft) 80%, var(--accent-soft));
+}
+
+.micro-help {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+.win-dialog {
+  border-color: transparent;
+  border-radius: 16px;
+  box-shadow: 0 22px 60px color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+.win-dialog::backdrop {
+  background: color-mix(in srgb, var(--text) 28%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.win-mark {
+  text-shadow: 0 0 10px var(--crystal-glow);
+}
+
+@media (max-width: 380px) {
+  .palette-menu {
+    width: min(17rem, calc(100vw - 20px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-button,
+.difficulty button,
+.mirror::before,
+.primary-button,
+.secondary-button {
+    transition-duration: 1ms;
+  }
+}
