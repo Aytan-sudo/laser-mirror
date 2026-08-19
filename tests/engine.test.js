@@ -20,27 +20,74 @@ test('orientationForTurn retrouve le miroir nécessaire', () => {
   assert.equal(orientationForTurn(DIRECTIONS.right, DIRECTIONS.down), '\\');
 });
 
-test('un trajet simple atteint la cible', () => {
+test('un trajet simple atteint la cible de la bonne couleur', () => {
   const puzzle = {
     size: 4,
     entry: { side: 'left', index: 1 },
-    target: { row: 3, col: 2 },
-    mirrors: [
-      { row: 1, col: 2 },
-      { row: 3, col: 2 },
-    ],
+    target: { row: 3, col: 2, color: 'red' },
+    laserColor: 'red',
+    filters: [],
+    mirrors: [{ row: 1, col: 2 }, { row: 3, col: 2 }],
     initialMask: 1,
   };
   assert.equal(traceLaser(puzzle, 1).hit, true);
   assert.equal(traceLaser(puzzle, 0).hit, false);
 });
 
+test('un filtre de mauvaise couleur absorbe le rayon', () => {
+  const puzzle = {
+    size: 4,
+    entry: { side: 'left', index: 1 },
+    target: { row: 1, col: 3, color: 'red' },
+    laserColor: 'red',
+    filters: [{ row: 1, col: 2, color: 'blue' }],
+    mirrors: [],
+    initialMask: 0,
+  };
+  const trace = traceLaser(puzzle);
+  assert.equal(trace.hit, false);
+  assert.equal(trace.blocked, true);
+  assert.deepEqual(trace.blockedAt, { row: 1, col: 2, color: 'blue' });
+});
+
+test('un filtre de la bonne couleur laisse passer le rayon', () => {
+  const puzzle = {
+    size: 4,
+    entry: { side: 'left', index: 1 },
+    target: { row: 1, col: 3, color: 'red' },
+    laserColor: 'red',
+    filters: [{ row: 1, col: 2, color: 'red' }],
+    mirrors: [],
+    initialMask: 0,
+  };
+  assert.equal(traceLaser(puzzle).hit, true);
+});
+
+test('le solver ne tourne jamais un miroir verrouillé', () => {
+  const puzzle = {
+    size: 4,
+    entry: { side: 'left', index: 1 },
+    target: { row: 3, col: 2, color: 'red' },
+    laserColor: 'red',
+    filters: [],
+    mirrors: [
+      { row: 1, col: 2, locked: true },
+      { row: 3, col: 2, locked: false },
+    ],
+    initialMask: 0,
+  };
+  const solved = solvePuzzle(puzzle);
+  assert.equal(solved.solvable, false);
+});
+
 test('le solver retourne la distance minimale depuis la configuration initiale', () => {
   const puzzle = {
     size: 4,
     entry: { side: 'left', index: 1 },
-    target: { row: 3, col: 2 },
-    mirrors: [{ row: 1, col: 2 }],
+    target: { row: 3, col: 2, color: 'red' },
+    laserColor: 'red',
+    filters: [],
+    mirrors: [{ row: 1, col: 2, locked: false }],
     initialMask: 0,
   };
   const solved = solvePuzzle(puzzle);
