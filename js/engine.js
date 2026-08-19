@@ -5,6 +5,8 @@ export const DIRECTIONS = Object.freeze({
   left: Object.freeze({ dx: -1, dy: 0, name: 'left' }),
 });
 
+export const LASER_COLORS = Object.freeze(['red', 'blue', 'yellow']);
+
 const DIRECTION_LIST = Object.values(DIRECTIONS);
 
 export function reflect(direction, orientation) {
@@ -33,8 +35,10 @@ export function maskFromOrientations(mirrors) {
 }
 
 export function traceLaser(puzzle, mask = puzzle.initialMask) {
-  const { size, entry, target, mirrors } = puzzle;
+  const { size, entry, target, mirrors, filters = [] } = puzzle;
+  const laserColor = puzzle.laserColor ?? target.color ?? 'red';
   const mirrorAt = new Map(mirrors.map((mirror, index) => [`${mirror.row},${mirror.col}`, index]));
+  const filterAt = new Map(filters.map((filter) => [`${filter.row},${filter.col}`, filter]));
 
   let { row, col, direction } = entryState(size, entry);
   let currentDirection = direction;
@@ -45,15 +49,39 @@ export function traceLaser(puzzle, mask = puzzle.initialMask) {
   while (inside(size, row, col)) {
     const stateKey = `${row},${col},${currentDirection.name}`;
     if (seenStates.has(stateKey)) {
-      return { hit: false, loop: true, points, visitedCells, exit: null };
+      return { hit: false, loop: true, blocked: false, color: laserColor, points, visitedCells, exit: null };
     }
     seenStates.add(stateKey);
 
     visitedCells.push({ row, col });
     points.push({ x: col + 0.5, y: row + 0.5 });
 
+    const filter = filterAt.get(`${row},${col}`);
+    if (filter && filter.color !== laserColor) {
+      return {
+        hit: false,
+        loop: false,
+        blocked: true,
+        blockedAt: { row, col, color: filter.color },
+        color: laserColor,
+        points,
+        visitedCells,
+        exit: null,
+      };
+    }
+
     if (row === target.row && col === target.col) {
-      return { hit: true, loop: false, points, visitedCells, exit: null };
+      const targetAccepts = !target.color || target.color === laserColor;
+      return {
+        hit: targetAccepts,
+        loop: false,
+        blocked: !targetAccepts,
+        blockedAt: targetAccepts ? null : { row, col, color: target.color },
+        color: laserColor,
+        points,
+        visitedCells,
+        exit: null,
+      };
     }
 
     const mirrorIndex = mirrorAt.get(`${row},${col}`);
@@ -69,6 +97,8 @@ export function traceLaser(puzzle, mask = puzzle.initialMask) {
   return {
     hit: false,
     loop: false,
+    blocked: false,
+    color: laserColor,
     points,
     visitedCells,
     exit: { row, col, direction: currentDirection.name },
@@ -77,15 +107,21 @@ export function traceLaser(puzzle, mask = puzzle.initialMask) {
 
 export function solvePuzzle(puzzle, options = {}) {
   const maxOptimalMasks = options.maxOptimalMasks ?? 16;
-  const mirrorCount = puzzle.mirrors.length;
   const initialMask = puzzle.initialMask;
+  const mutableIndexes = puzzle.mirrors
+    .map((mirror, index) => (mirror.locked ? -1 : index))
+    .filter((index) => index >= 0);
   let explored = 0;
 
-  for (let distance = 0; distance <= mirrorCount; distance += 1) {
+  for (let distance = 0; distance <= mutableIndexes.length; distance += 1) {
     const optimalMasks = [];
     let optimalCount = 0;
 
-    forEachCombination(mirrorCount, distance, (toggleMask) => {
+    forEachCombination(mutableIndexes.length, distance, (localToggleMask) => {
+      let toggleMask = 0;
+      for (let localIndex = 0; localIndex < mutableIndexes.length; localIndex += 1) {
+        if (localToggleMask & (1 << localIndex)) toggleMask |= (1 << mutableIndexes[localIndex]);
+      }
       const candidateMask = initialMask ^ toggleMask;
       explored += 1;
       if (!traceLaser(puzzle, candidateMask).hit) return;
