@@ -3,6 +3,15 @@ import { DIFFICULTIES, generatePuzzle } from './generator.js';
 import { randomSeed } from './rng.js';
 import { loadValue, removeValue, saveValue } from './storage.js';
 
+const THEMES = {
+  sable: { label: 'Sable', themeColor: '#f7f2e8' },
+  ardoise: { label: 'Ardoise', themeColor: '#edf1f4' },
+  sauge: { label: 'Sauge', themeColor: '#f1f2e9' },
+  rose: { label: 'Rose', themeColor: '#f8eff1' },
+  nuit: { label: 'Nuit', themeColor: '#16120e' },
+  crepuscule: { label: 'Crépuscule', themeColor: '#19151b' },
+};
+
 const els = {
   board: document.querySelector('#board'),
   cells: document.querySelector('#cells'),
@@ -14,6 +23,7 @@ const els = {
   difficulty: document.querySelector('#difficulty'),
   reset: document.querySelector('#reset-button'),
   theme: document.querySelector('#theme-button'),
+  paletteMenu: document.querySelector('#palette-menu'),
   newPuzzle: document.querySelector('#new-button'),
   winDialog: document.querySelector('#win-dialog'),
   winTitle: document.querySelector('#win-title'),
@@ -73,9 +83,31 @@ function bindEvents() {
     newPuzzle();
   });
   els.winClose.addEventListener('click', () => els.winDialog.close());
-  els.theme.addEventListener('click', toggleTheme);
+
+  els.theme.addEventListener('click', togglePaletteMenu);
+  els.paletteMenu.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-theme-choice]');
+    if (!button) return;
+    const next = button.dataset.themeChoice;
+    if (!THEMES[next]) return;
+    setTheme(next);
+    saveValue('theme', next);
+    closePaletteMenu();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (els.paletteMenu.hidden) return;
+    if (els.paletteMenu.contains(event.target) || els.theme.contains(event.target)) return;
+    closePaletteMenu();
+  });
 
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !els.paletteMenu.hidden) {
+      event.preventDefault();
+      closePaletteMenu();
+      els.theme.focus();
+      return;
+    }
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.key.toLowerCase() === 'n' && !isTypingTarget(event.target)) {
       event.preventDefault();
@@ -264,29 +296,47 @@ function persistGame() {
 }
 
 function applyStoredTheme() {
-  const theme = loadValue('theme', 'system');
-  setTheme(theme === 'clair' || theme === 'sombre' ? theme : 'system');
+  const stored = loadValue('theme', 'sable');
+  const migrated = stored === 'clair' ? 'sable'
+    : stored === 'sombre' ? 'nuit'
+      : stored === 'system' ? 'sable'
+        : stored;
+  const theme = THEMES[migrated] ? migrated : 'sable';
+  if (theme !== stored) saveValue('theme', theme);
+  setTheme(theme);
 }
 
-function toggleTheme() {
-  const explicit = document.documentElement.dataset.theme;
-  const effectiveDark = explicit === 'sombre' || (
-    !explicit && window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  );
-  const next = effectiveDark ? 'clair' : 'sombre';
-  setTheme(next);
-  saveValue('theme', next);
+function togglePaletteMenu() {
+  const opening = els.paletteMenu.hidden;
+  els.paletteMenu.hidden = !opening;
+  els.theme.setAttribute('aria-expanded', String(opening));
+  if (opening) {
+    const active = els.paletteMenu.querySelector('[aria-checked="true"]');
+    active?.focus();
+  }
+}
+
+function closePaletteMenu() {
+  els.paletteMenu.hidden = true;
+  els.theme.setAttribute('aria-expanded', 'false');
 }
 
 function setTheme(theme) {
-  if (theme === 'system') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = theme;
+  const selected = THEMES[theme] ? theme : 'sable';
+  document.documentElement.dataset.theme = selected;
 
-  const effectiveDark = theme === 'sombre' || (
-    theme === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  );
-  els.theme?.setAttribute('aria-label', effectiveDark ? 'Passer au thème clair' : 'Passer au thème sombre');
-  els.theme?.setAttribute('title', effectiveDark ? 'Thème clair' : 'Thème sombre');
+  const config = THEMES[selected];
+  els.theme?.setAttribute('aria-label', `Choisir une palette. Palette actuelle : ${config.label}`);
+  els.theme?.setAttribute('title', `Palette : ${config.label}`);
+
+  for (const button of els.paletteMenu?.querySelectorAll('[data-theme-choice]') ?? []) {
+    const active = button.dataset.themeChoice === selected;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-checked', String(active));
+  }
+
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  metaTheme?.setAttribute('content', config.themeColor);
 }
 
 function announce(message) {
