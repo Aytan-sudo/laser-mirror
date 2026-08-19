@@ -1,0 +1,462 @@
+/* Laser & Miroirs — toutes les couleurs et toute la géométrie visuelle vivent
+   ici. Le moteur ne connaît que la grille, les miroirs et le trajet du rayon. */
+
+:root {
+  color-scheme: light;
+  --bg: #eef3f8;
+  --panel: #ffffff;
+  --panel-soft: #f7f9fc;
+  --cell: #f9fbfd;
+  --cell-alt: #f2f6fa;
+  --text: #172231;
+  --muted: #657386;
+  --border: #d4dde8;
+  --border-vivid: #b7c5d5;
+  --accent: #346a91;
+  --accent-soft: #e1edf6;
+  --accent-text: #ffffff;
+  --laser: #f05252;
+  --laser-hot: #ff7770;
+  --laser-glow: rgba(240, 82, 82, 0.34);
+  --metal: #607489;
+  --metal-light: #f1f6fa;
+  --crystal: #18a7c4;
+  --crystal-light: #9deaff;
+  --crystal-glow: rgba(24, 167, 196, 0.36);
+  --success: #16856d;
+  --shadow: 0 18px 44px rgba(36, 58, 79, 0.14);
+  --radius: 14px;
+}
+
+:root[data-theme="sombre"] {
+  color-scheme: dark;
+  --bg: #0e141c;
+  --panel: #161e29;
+  --panel-soft: #111923;
+  --cell: #18222e;
+  --cell-alt: #141d28;
+  --text: #eef4fb;
+  --muted: #94a3b5;
+  --border: #2b3949;
+  --border-vivid: #42546a;
+  --accent: #6ba7d2;
+  --accent-soft: #1c3040;
+  --accent-text: #08131c;
+  --laser: #ff6861;
+  --laser-hot: #ff9a8f;
+  --laser-glow: rgba(255, 104, 97, 0.4);
+  --metal: #a9bbcb;
+  --metal-light: #edf6ff;
+  --crystal: #35c8e6;
+  --crystal-light: #b4f4ff;
+  --crystal-glow: rgba(53, 200, 230, 0.4);
+  --success: #53d7b8;
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="clair"]) {
+    color-scheme: dark;
+    --bg: #0e141c;
+    --panel: #161e29;
+    --panel-soft: #111923;
+    --cell: #18222e;
+    --cell-alt: #141d28;
+    --text: #eef4fb;
+    --muted: #94a3b5;
+    --border: #2b3949;
+    --border-vivid: #42546a;
+    --accent: #6ba7d2;
+    --accent-soft: #1c3040;
+    --accent-text: #08131c;
+    --laser: #ff6861;
+    --laser-hot: #ff9a8f;
+    --laser-glow: rgba(255, 104, 97, 0.4);
+    --metal: #a9bbcb;
+    --metal-light: #edf6ff;
+    --crystal: #35c8e6;
+    --crystal-light: #b4f4ff;
+    --crystal-glow: rgba(53, 200, 230, 0.4);
+    --success: #53d7b8;
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { min-height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: safe center;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+button { font: inherit; }
+
+.game-shell {
+  width: min(100%, 31rem);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 7vw, 2.45rem);
+  line-height: 1;
+  font-weight: 820;
+  letter-spacing: -0.025em;
+}
+
+.topbar-actions { display: flex; gap: 8px; }
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.icon-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-button:hover { border-color: var(--border-vivid); }
+.icon-button:active { transform: translateY(1px); }
+.icon-button:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.difficulty button:focus-visible,
+.mirror:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 46%, transparent);
+  outline-offset: 2px;
+}
+
+.difficulty {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.difficulty button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.difficulty button:hover { color: var(--text); }
+.difficulty button.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.board {
+  --size: 6;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--border-vivid);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cells {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--size), 1fr);
+  grid-template-rows: repeat(var(--size), 1fr);
+}
+
+.cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--cell);
+}
+
+.cell:nth-child(even) { background: var(--cell-alt); }
+
+.mirror {
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--metal);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mirror::before {
+  content: "";
+  position: absolute;
+  width: 58%;
+  height: 58%;
+  border: 1px solid color-mix(in srgb, var(--metal) 26%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--metal-light) 45%, transparent);
+}
+
+.mirror:hover::before { border-color: color-mix(in srgb, var(--metal) 52%, transparent); }
+.mirror:active::before { transform: scale(0.96); }
+
+.mirror-bar {
+  position: relative;
+  z-index: 1;
+  width: 68%;
+  height: 8%;
+  min-height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, var(--metal-light), var(--metal) 42%, var(--metal) 70%, var(--metal-light));
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--metal) 30%, transparent);
+  transition: transform 140ms ease;
+}
+
+.mirror[data-orientation="slash"] .mirror-bar { transform: rotate(-45deg); }
+.mirror[data-orientation="backslash"] .mirror-bar { transform: rotate(45deg); }
+
+.target-cell {
+  z-index: 4;
+  display: grid;
+  place-items: center;
+}
+
+.crystal {
+  width: 38%;
+  aspect-ratio: 1;
+  transform: rotate(45deg);
+  border: 2px solid var(--crystal-light);
+  border-radius: 18% 42% 18% 42%;
+  background: linear-gradient(135deg, var(--crystal-light), var(--crystal) 46%, color-mix(in srgb, var(--crystal) 72%, #004a66));
+  box-shadow: 0 0 12px var(--crystal-glow), inset 0 0 7px rgba(255, 255, 255, 0.55);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.board.is-hit .crystal {
+  transform: rotate(45deg) scale(1.16);
+  box-shadow: 0 0 20px 5px var(--crystal-glow), inset 0 0 9px rgba(255, 255, 255, 0.7);
+}
+
+.laser-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.beam,
+.beam-glow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.beam-glow {
+  stroke: var(--laser-glow);
+  stroke-width: 10px;
+  filter: blur(2px);
+}
+
+.beam {
+  stroke: var(--laser);
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 2px var(--laser-hot));
+}
+
+.emitter {
+  fill: var(--laser-hot);
+  stroke: var(--laser);
+  stroke-width: 0.06;
+  filter: drop-shadow(0 0 3px var(--laser));
+}
+
+.board.is-hit .beam { stroke: var(--laser-hot); }
+.board.is-loop .beam { stroke-dasharray: 0.13 0.08; }
+
+.hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.counter-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.counter strong {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.counter--par strong { color: var(--accent); }
+
+.primary-button,
+.secondary-button {
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.primary-button:hover { filter: brightness(1.05); }
+.primary-button:active { transform: translateY(1px); }
+
+.secondary-button {
+  border: 1px solid var(--border-vivid);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.secondary-button:hover { border-color: var(--accent); }
+
+.micro-help {
+  margin: -3px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.4;
+}
+
+.win-dialog {
+  width: min(calc(100% - 28px), 25rem);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.32);
+  text-align: center;
+}
+
+.win-dialog::backdrop {
+  background: rgba(7, 15, 24, 0.52);
+  backdrop-filter: blur(3px);
+}
+
+.win-mark {
+  margin: 0 auto 8px;
+  color: var(--crystal);
+  font-size: 2.4rem;
+  text-shadow: 0 0 16px var(--crystal-glow);
+}
+
+.win-dialog h2 { margin: 0; font-size: 1.45rem; }
+.win-result { margin: 10px 0 4px; font-size: 1.05rem; font-weight: 760; }
+.win-detail { margin: 0 0 18px; color: var(--muted); line-height: 1.45; }
+.dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 380px), (max-height: 700px) {
+  body { padding-top: max(9px, env(safe-area-inset-top)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+  .game-shell { gap: 8px; }
+  .eyebrow { display: none; }
+  h1 { font-size: 1.65rem; }
+  .icon-button { width: 38px; height: 38px; }
+  .difficulty button { padding-block: 6px; }
+  .counter { padding-block: 7px; }
+  .micro-help { font-size: 0.68rem; }
+}
+
+@media (pointer: coarse) {
+  .desktop-help { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
