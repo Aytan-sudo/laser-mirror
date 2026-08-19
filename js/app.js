@@ -147,6 +147,11 @@ function bindEvents() {
 
 function newPuzzle() {
   cancelSolutionDemo();
+  if (state.mode === 'daily') {
+    const preferred = loadValue('difficulty', 'normal');
+    state.difficulty = DIFFICULTIES[preferred] ? preferred : 'normal';
+    renderDifficulty();
+  }
   state.mode = 'random';
   state.dailyDate = null;
   const seed = randomSeed();
@@ -458,7 +463,10 @@ function openStats() {
   els.statsTotal.textContent = String(stats.total);
   els.statsPerfect.textContent = stats.total ? `${Math.round((stats.perfect / stats.total) * 100)} %` : '—';
   els.statsDelta.textContent = stats.total ? `+${(stats.totalDelta / stats.total).toFixed(1)}` : '—';
-  els.statsStreak.textContent = String(stats.daily.currentStreak);
+  const activeStreak = stats.daily.lastCompleted && dayDifference(stats.daily.lastCompleted, todayKey()) <= 1
+    ? stats.daily.currentStreak
+    : 0;
+  els.statsStreak.textContent = String(activeStreak);
   els.statsBestStreak.textContent = String(stats.daily.bestStreak);
   els.statsDialog.showModal();
 }
