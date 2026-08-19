@@ -1,9 +1,10 @@
-const CACHE = 'laser-mirror-v3';
+const CACHE = 'laser-mirror-v4';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './css/polish.css',
+  './css/features.css',
   './js/app.js',
   './js/engine.js',
   './js/generator.js',
