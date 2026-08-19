@@ -22,9 +22,49 @@
         <button id="reset-button" class="icon-button" type="button" aria-label="Recommencer ce puzzle" title="Recommencer (R)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8 8 0 1 1 1.9 8.2"/><path d="M4 4v5h5"/></svg>
         </button>
-        <button id="theme-button" class="icon-button" type="button" aria-label="Changer de thème" title="Changer de thème">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
+        <button
+          id="theme-button"
+          class="icon-button"
+          type="button"
+          aria-label="Choisir une palette"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="palette-menu"
+          title="Choisir une palette"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a9 9 0 0 0 0 18h1.2a1.8 1.8 0 0 0 0-3.6h-.7a1.6 1.6 0 0 1 0-3.2H15A5.8 5.8 0 0 0 20.8 9C19.8 5.5 16.3 3 12 3Z"/>
+            <circle cx="7.3" cy="10.2" r=".65"/><circle cx="10" cy="6.9" r=".65"/>
+            <circle cx="14" cy="6.9" r=".65"/><circle cx="16.7" cy="10.2" r=".65"/>
+          </svg>
         </button>
+
+        <div id="palette-menu" class="palette-menu" role="menu" aria-label="Palette de couleurs" hidden>
+          <button type="button" role="menuitemradio" aria-checked="true" data-theme-choice="sable">
+            <span class="palette-swatch swatch-sable" aria-hidden="true"></span>
+            <span>Sable</span>
+          </button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="ardoise">
+            <span class="palette-swatch swatch-ardoise" aria-hidden="true"></span>
+            <span>Ardoise</span>
+          </button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="sauge">
+            <span class="palette-swatch swatch-sauge" aria-hidden="true"></span>
+            <span>Sauge</span>
+          </button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="rose">
+            <span class="palette-swatch swatch-rose" aria-hidden="true"></span>
+            <span>Rose</span>
+          </button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="nuit">
+            <span class="palette-swatch swatch-nuit" aria-hidden="true"></span>
+            <span>Nuit</span>
+          </button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-choice="crepuscule">
+            <span class="palette-swatch swatch-crepuscule" aria-hidden="true"></span>
+            <span>Crépuscule</span>
+          </button>
+        </div>
       </div>
     </header>
 
