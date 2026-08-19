@@ -1,6 +1,7 @@
 import { createRng } from './rng.js';
 import {
   DIRECTIONS,
+  LASER_COLORS,
   maskFromOrientations,
   orientationForTurn,
   solvePuzzle,
@@ -8,9 +9,18 @@ import {
 } from './engine.js';
 
 export const DIFFICULTIES = Object.freeze({
-  facile: Object.freeze({ label: 'Facile', size: 6, mirrors: [5, 7], pathTurns: [3, 5], par: [2, 4], maxOptimal: 8 }),
-  normal: Object.freeze({ label: 'Normal', size: 6, mirrors: [7, 10], pathTurns: [5, 8], par: [4, 7], maxOptimal: 5 }),
-  difficile: Object.freeze({ label: 'Difficile', size: 6, mirrors: [9, 12], pathTurns: [7, 10], par: [6, 10], maxOptimal: 4 }),
+  facile: Object.freeze({
+    label: 'Facile', size: 6, mirrors: [5, 7], pathTurns: [3, 5], par: [2, 4], maxOptimal: 8,
+    locked: [0, 1], filters: [1, 1],
+  }),
+  normal: Object.freeze({
+    label: 'Normal', size: 6, mirrors: [7, 10], pathTurns: [5, 8], par: [4, 7], maxOptimal: 5,
+    locked: [1, 2], filters: [1, 2],
+  }),
+  difficile: Object.freeze({
+    label: 'Difficile', size: 6, mirrors: [9, 12], pathTurns: [7, 10], par: [6, 10], maxOptimal: 4,
+    locked: [2, 3], filters: [2, 3],
+  }),
 });
 
 const SIDES = ['left', 'right', 'top', 'bottom'];
@@ -19,8 +29,8 @@ export function generatePuzzle(seed, difficultyKey = 'normal') {
   const config = DIFFICULTIES[difficultyKey];
   if (!config) throw new Error(`Difficulté inconnue: ${difficultyKey}`);
 
-  const rng = createRng(`${seed}|${difficultyKey}`);
-  const maxAttempts = 220;
+  const rng = createRng(`${seed}|${difficultyKey}|v2`);
+  const maxAttempts = 320;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const desiredTurns = rng.int(config.pathTurns[0], config.pathTurns[1]);
@@ -36,13 +46,13 @@ export function generatePuzzle(seed, difficultyKey = 'normal') {
     );
     if (totalMirrorCount > 12) continue;
 
-    const intendedCells = new Set(pathData.path.map((step) => `${step.row},${step.col}`));
+    const pathCells = new Set(pathData.path.map((step) => `${step.row},${step.col}`));
     const targetKey = `${pathData.target.row},${pathData.target.col}`;
     const candidates = [];
     for (let row = 0; row < config.size; row += 1) {
       for (let col = 0; col < config.size; col += 1) {
         const key = `${row},${col}`;
-        if (!intendedCells.has(key) && key !== targetKey) candidates.push({ row, col });
+        if (!pathCells.has(key) && key !== targetKey) candidates.push({ row, col });
       }
     }
 
@@ -51,36 +61,81 @@ export function generatePuzzle(seed, difficultyKey = 'normal') {
       ...cell,
       orientation: rng() < 0.5 ? '/' : '\\',
       intended: false,
+      locked: false,
     }));
 
     let mirrors = [...intendedMirrors, ...decoys]
       .sort((a, b) => a.row - b.row || a.col - b.col);
 
-    const solutionMask = maskFromOrientations(mirrors);
     const intendedIndexes = mirrors
       .map((mirror, index) => (mirror.intended ? index : -1))
       .filter((index) => index >= 0);
 
+    const maxLocked = Math.min(
+      config.locked[1],
+      Math.max(0, intendedIndexes.length - config.par[0]),
+    );
+    const minLocked = Math.min(config.locked[0], maxLocked);
+    const lockedCount = rng.int(minLocked, maxLocked);
+    const lockedIndexes = new Set(rng.shuffle(intendedIndexes).slice(0, lockedCount));
+    mirrors = mirrors.map((mirror, index) => ({ ...mirror, locked: lockedIndexes.has(index) }));
+
+    const mutableIntendedIndexes = intendedIndexes.filter((index) => !lockedIndexes.has(index));
+    if (mutableIntendedIndexes.length < config.par[0]) continue;
+
+    const solutionMask = maskFromOrientations(mirrors);
     const desiredDistance = rng.int(
       config.par[0],
-      Math.min(config.par[1], intendedIndexes.length),
+      Math.min(config.par[1], mutableIntendedIndexes.length),
     );
-    const wrongIndexes = rng.shuffle(intendedIndexes).slice(0, desiredDistance);
+    const wrongIndexes = rng.shuffle(mutableIntendedIndexes).slice(0, desiredDistance);
     let initialMask = solutionMask;
     for (const index of wrongIndexes) initialMask ^= (1 << index);
 
     mirrors.forEach((mirror, index) => {
-      if (!mirror.intended && rng() < 0.5) initialMask ^= (1 << index);
+      if (!mirror.intended && !mirror.locked && rng() < 0.5) initialMask ^= (1 << index);
     });
 
+    const laserColor = rng.pick(LASER_COLORS);
+    const filterCount = rng.int(config.filters[0], config.filters[1]);
+    const mirrorCells = new Set(mirrors.map((mirror) => `${mirror.row},${mirror.col}`));
+    const straightPathCells = pathData.path
+      .slice(1, -1)
+      .filter((step) => !mirrorCells.has(`${step.row},${step.col}`));
+    if (straightPathCells.length === 0) continue;
+
+    const filters = [];
+    const passCell = rng.pick(straightPathCells);
+    filters.push({ row: passCell.row, col: passCell.col, color: laserColor, intended: true });
+
+    const occupied = new Set([...mirrorCells, targetKey, `${passCell.row},${passCell.col}`]);
+    const filterCandidates = [];
+    for (let row = 0; row < config.size; row += 1) {
+      for (let col = 0; col < config.size; col += 1) {
+        const key = `${row},${col}`;
+        if (!occupied.has(key)) filterCandidates.push({ row, col });
+      }
+    }
+
+    for (const cell of rng.shuffle(filterCandidates).slice(0, Math.max(0, filterCount - 1))) {
+      const otherColors = LASER_COLORS.filter((color) => color !== laserColor);
+      filters.push({
+        ...cell,
+        color: rng() < 0.78 ? rng.pick(otherColors) : laserColor,
+        intended: false,
+      });
+    }
+
     const puzzle = {
-      version: 1,
+      version: 2,
       seed: String(seed),
       difficulty: difficultyKey,
       size: config.size,
       entry: pathData.entry,
-      target: pathData.target,
-      mirrors: mirrors.map(({ row, col }) => ({ row, col })),
+      target: { ...pathData.target, color: laserColor },
+      laserColor,
+      filters: filters.map(({ row, col, color }) => ({ row, col, color })),
+      mirrors: mirrors.map(({ row, col, locked }) => ({ row, col, locked })),
       initialMask,
     };
 
@@ -96,10 +151,13 @@ export function generatePuzzle(seed, difficultyKey = 'normal') {
     return {
       ...puzzle,
       par: solved.par,
+      optimalMask: solved.optimalMasks[0],
       analysis: {
         explored: solved.explored,
         optimalCount: solved.optimalCount,
         intendedMirrors: intendedMirrors.length,
+        lockedMirrors: lockedCount,
+        filters: filters.length,
         attempts: attempt,
       },
     };
@@ -141,9 +199,7 @@ function buildPath(size, desiredTurns, rng) {
 }
 
 function extendPath(state) {
-  const {
-    size, rng, path, visited, direction, turns, desiredTurns, stepsSinceTurn,
-  } = state;
+  const { size, rng, path, visited, direction, turns, desiredTurns, stepsSinceTurn } = state;
   const current = path.at(-1);
 
   if (turns === desiredTurns && stepsSinceTurn >= 1 && path.length >= desiredTurns + 5) {
@@ -164,10 +220,7 @@ function extendPath(state) {
     const nextTurns = turns + (turning ? 1 : 0);
     if (nextTurns > desiredTurns) continue;
 
-    const next = {
-      row: current.row + nextDirection.dy,
-      col: current.col + nextDirection.dx,
-    };
+    const next = { row: current.row + nextDirection.dy, col: current.col + nextDirection.dx };
     const key = `${next.row},${next.col}`;
     if (!inside(size, next.row, next.col) || visited.has(key)) continue;
 
@@ -204,6 +257,7 @@ function mirrorsFromPath(path) {
       col: step.col,
       orientation: orientationForTurn(step.incoming, step.outgoing),
       intended: true,
+      locked: false,
     });
   }
   return mirrors;
