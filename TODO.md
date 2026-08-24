@@ -1,14 +1,12 @@
-# Pistes après la v1.3
+# Pistes après la v1.4
 
-La v1.3 couvre le cœur du jeu, le défi quotidien, les statistiques, la solution optimale, les miroirs verrouillés, les filtres colorés, la calibration du PAR par les filtres et le partage par URL.
+La v1.4 couvre le cœur du jeu, le défi quotidien, les statistiques, la solution optimale, les miroirs verrouillés, les filtres colorés, la calibration du PAR par les filtres, le partage du lien et du résultat, les Options (palette, sons, vibration) et le socle PWA complet.
 
 ## Améliorations naturelles
 
 - historique détaillé par difficulté ;
 - indice progressif basé sur une solution optimale ;
-- calibration de difficulté à partir de parties humaines plutôt que des seuls indicateurs du solver ;
-- icônes PWA rasterisées 192/512 pour une compatibilité maximale des écrans d'accueil ;
-- option de partage du résultat du défi quotidien.
+- calibration de difficulté à partir de parties humaines plutôt que des seuls indicateurs du solver.
 
 ## Éléments de puzzle pour plus tard
 

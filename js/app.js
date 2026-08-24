@@ -1,6 +1,9 @@
+import { VERSION } from './config.js';
 import { orientationAt, traceLaser } from './engine.js';
 import { DIFFICULTIES, generatePuzzle } from './generator.js';
 import { randomSeed } from './rng.js';
+import { shareLink, shareMessage } from './share.js';
+import { soundLocked, soundPerfect, soundRotate, soundWin } from './sound.js';
 import { loadValue, removeValue, saveValue } from './storage.js';
 
 const THEMES = {
@@ -11,6 +14,10 @@ const THEMES = {
   nuit: { label: 'Nuit', themeColor: '#16120e' },
   crepuscule: { label: 'Crépuscule', themeColor: '#19151b' },
 };
+
+// Le bouton d'en-tête fait tourner cette liste ; les Options y donnent
+// l'accès direct.
+const THEME_ORDER = Object.keys(THEMES);
 
 const COLOR_LABELS = { red: 'rouge', blue: 'bleu', yellow: 'jaune' };
 
@@ -25,7 +32,15 @@ const els = {
   difficulty: document.querySelector('#difficulty'),
   reset: document.querySelector('#reset-button'),
   theme: document.querySelector('#theme-button'),
-  paletteMenu: document.querySelector('#palette-menu'),
+  paletteChoice: document.querySelector('#palette-choice'),
+  themeColor: document.querySelector('#couleur-barre'),
+  options: document.querySelector('#options-button'),
+  optionsDialog: document.querySelector('#options-dialog'),
+  optionsClose: document.querySelector('#options-close'),
+  optionsDone: document.querySelector('#options-done'),
+  optionSounds: document.querySelector('#option-sounds'),
+  optionVibration: document.querySelector('#option-vibration'),
+  version: document.querySelector('#version'),
   newPuzzle: document.querySelector('#new-button'),
   daily: document.querySelector('#daily-button'),
   share: document.querySelector('#share-button'),
@@ -37,6 +52,7 @@ const els = {
   winResult: document.querySelector('#win-result'),
   winDetail: document.querySelector('#win-detail'),
   winSolution: document.querySelector('#win-solution'),
+  winShare: document.querySelector('#win-share'),
   winNew: document.querySelector('#win-new'),
   winClose: document.querySelector('#win-close'),
   statsDialog: document.querySelector('#stats-dialog'),
@@ -57,15 +73,34 @@ let state = {
   demonstrating: false,
   mode: 'random',
   dailyDate: null,
+  // Le résultat est figé à la victoire : la lecture de la solution optimale
+  // rejoue les rotations et ne doit pas réécrire ce qui sera partagé.
+  result: null,
   difficulty: loadValue('difficulty', 'normal'),
 };
 let solutionToken = 0;
+
+const preferences = {
+  sounds: loadValue('sounds', true) !== false,
+  vibration: loadValue('vibration', true) !== false,
+};
+
+function play(sound) {
+  if (preferences.sounds) sound();
+}
+
+function vibrate(pattern) {
+  if (preferences.vibration) navigator.vibrate?.(pattern);
+}
 
 init();
 
 function init() {
   if (!DIFFICULTIES[state.difficulty]) state.difficulty = 'normal';
   applyStoredTheme();
+  els.optionSounds.checked = preferences.sounds;
+  els.optionVibration.checked = preferences.vibration;
+  els.version.textContent = `Laser & Miroirs ${VERSION}`;
   bindEvents();
   renderDifficulty();
 
@@ -93,7 +128,12 @@ function bindEvents() {
 
   els.cells.addEventListener('click', (event) => {
     const mirror = event.target.closest('[data-mirror-index]');
-    if (!mirror || mirror.dataset.locked === 'true' || state.won || state.demonstrating) return;
+    if (!mirror || state.won || state.demonstrating) return;
+    if (mirror.dataset.locked === 'true') {
+      play(soundLocked);
+      vibrate(30);
+      return;
+    }
     rotateMirror(Number(mirror.dataset.mirrorIndex));
   });
 
@@ -101,7 +141,8 @@ function bindEvents() {
   els.newPuzzle.addEventListener('click', newPuzzle);
   els.daily.addEventListener('click', loadDailyPuzzle);
   els.stats.addEventListener('click', openStats);
-  els.share.addEventListener('click', sharePuzzle);
+  els.share.addEventListener('click', () => sharePuzzle(els.share, '.share-text'));
+  els.winShare.addEventListener('click', () => sharePuzzle(els.winShare, '.win-share-text'));
   els.statsClose.addEventListener('click', () => els.statsDialog.close());
 
   els.winNew.addEventListener('click', () => {
@@ -111,30 +152,30 @@ function bindEvents() {
   els.winClose.addEventListener('click', () => els.winDialog.close());
   els.winSolution.addEventListener('click', showOptimalSolution);
 
-  els.theme.addEventListener('click', togglePaletteMenu);
-  els.paletteMenu.addEventListener('click', (event) => {
+  els.theme.addEventListener('click', nextTheme);
+  els.paletteChoice.addEventListener('click', (event) => {
     const button = event.target.closest('[data-theme-choice]');
     if (!button) return;
     const next = button.dataset.themeChoice;
     if (!THEMES[next]) return;
     setTheme(next);
     saveValue('theme', next);
-    closePaletteMenu();
   });
 
-  document.addEventListener('click', (event) => {
-    if (els.paletteMenu.hidden) return;
-    if (els.paletteMenu.contains(event.target) || els.theme.contains(event.target)) return;
-    closePaletteMenu();
-  });
+  els.options.addEventListener('click', () => els.optionsDialog.showModal());
+  els.optionsClose.addEventListener('click', () => els.optionsDialog.close());
+  els.optionsDone.addEventListener('click', () => els.optionsDialog.close());
+
+  for (const [element, key] of [[els.optionSounds, 'sounds'], [els.optionVibration, 'vibration']]) {
+    element.addEventListener('change', () => {
+      preferences[key] = element.checked;
+      saveValue(key, element.checked);
+      // Cocher la case donne aussitôt un échantillon de ce qu'elle promet.
+      if (element.checked) (key === 'sounds' ? soundRotate : () => navigator.vibrate?.(12))();
+    });
+  }
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !els.paletteMenu.hidden) {
-      event.preventDefault();
-      closePaletteMenu();
-      els.theme.focus();
-      return;
-    }
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
     if (document.querySelector('dialog[open]')) return;
     if (event.key.toLowerCase() === 'n' && !isTypingTarget(event.target)) {
@@ -144,6 +185,10 @@ function bindEvents() {
     if (event.key.toLowerCase() === 'r' && !isTypingTarget(event.target)) {
       event.preventDefault();
       resetPuzzle();
+    }
+    if (event.key.toLowerCase() === 't' && !isTypingTarget(event.target)) {
+      event.preventDefault();
+      nextTheme();
     }
   });
 }
@@ -199,6 +244,7 @@ function loadPuzzle(seed, difficulty, restored = null, retriesLeft = 3) {
     moves: restored?.moves ?? 0,
     won: false,
     demonstrating: false,
+    result: null,
   };
 
   // Un miroir verrouillé garde toujours son orientation d'origine : une partie
@@ -240,6 +286,7 @@ function resetPuzzle() {
   state.moves = 0;
   state.won = false;
   state.demonstrating = false;
+  state.result = null;
   if (els.winDialog.open) els.winDialog.close();
   renderState();
   persistGame();
@@ -250,6 +297,8 @@ function rotateMirror(index) {
   if (state.puzzle.mirrors[index]?.locked) return;
   state.mask ^= (1 << index);
   state.moves += 1;
+  play(soundRotate);
+  vibrate(10);
   renderState();
 
   const trace = traceLaser(state.puzzle, state.mask);
@@ -259,10 +308,13 @@ function rotateMirror(index) {
 
 function finishGame() {
   state.won = true;
+  state.result = { moves: state.moves, par: state.puzzle.par };
   removeValue('current-game');
   recordCompletion();
 
   const perfect = state.moves === state.puzzle.par;
+  play(perfect ? soundPerfect : soundWin);
+  vibrate(perfect ? [30, 45, 30, 45, 60] : [30, 45, 30]);
   els.winTitle.textContent = perfect ? 'Trajectoire parfaite !' : 'Cristal atteint !';
   els.winResult.textContent = `${state.moves} rotation${state.moves > 1 ? 's' : ''} · PAR ${state.puzzle.par}`;
   const dailyText = state.mode === 'daily' ? ' Défi du jour enregistré.' : '';
@@ -427,25 +479,42 @@ function openSharedPuzzle() {
   return loadPuzzle(seed, niveau);
 }
 
-async function sharePuzzle() {
-  const url = puzzleUrl();
+// Avant la victoire le message se réduit à une invitation et au lien ; une
+// fois le cristal atteint il porte le résultat en emojis.
+function shareData() {
+  return {
+    dailyDate: state.mode === 'daily' ? state.dailyDate : null,
+    seed: state.puzzle.seed,
+    difficulty: state.difficulty,
+    difficultyLabel: DIFFICULTIES[state.difficulty].label,
+    laserColor: state.puzzle.laserColor,
+    par: state.result?.par ?? state.puzzle.par,
+    moves: state.result?.moves ?? state.moves,
+    won: Boolean(state.result),
+  };
+}
+
+async function sharePuzzle(button, selector) {
+  if (!state.puzzle) return;
+  const data = shareData();
+  const text = shareMessage(data);
   try {
-    await navigator.clipboard.writeText(url);
-    flashShare('Lien copié !');
-    announce('Lien du puzzle copié dans le presse-papiers.');
+    await navigator.clipboard.writeText(text);
+    flashShare(button, selector, data.won ? 'Résultat copié !' : 'Lien copié !');
+    announce(data.won ? 'Résultat copié dans le presse-papiers.' : 'Lien du puzzle copié dans le presse-papiers.');
   } catch {
-    flashShare('Copie refusée');
-    announce(`Lien du puzzle : ${url}`);
+    flashShare(button, selector, 'Copie refusée');
+    announce(`Lien du puzzle : ${shareLink(data)}`);
   }
 }
 
-let shareTimer = 0;
-function flashShare(message) {
-  const label = els.share.querySelector('.share-text');
+const shareTimers = new WeakMap();
+function flashShare(button, selector, message) {
+  const label = button.querySelector(selector);
   if (!label) return;
   label.textContent = message;
-  window.clearTimeout(shareTimer);
-  shareTimer = window.setTimeout(() => { label.textContent = 'Partager'; }, 1800);
+  window.clearTimeout(shareTimers.get(button));
+  shareTimers.set(button, window.setTimeout(() => { label.textContent = 'Partager'; }, 1800));
 }
 
 function persistGame() {
@@ -482,6 +551,7 @@ function showOptimalSolution() {
       if (token !== solutionToken) return;
       state.mask ^= (1 << index);
       state.moves = step + 1;
+      play(soundRotate);
       renderState();
       if (step === indexes.length - 1) {
         state.demonstrating = false;
@@ -566,19 +636,13 @@ function applyStoredTheme() {
   setTheme(theme);
 }
 
-function togglePaletteMenu() {
-  const opening = els.paletteMenu.hidden;
-  els.paletteMenu.hidden = !opening;
-  els.theme.setAttribute('aria-expanded', String(opening));
-  if (opening) {
-    const active = els.paletteMenu.querySelector('[aria-checked="true"]');
-    active?.focus();
-  }
-}
-
-function closePaletteMenu() {
-  els.paletteMenu.hidden = true;
-  els.theme.setAttribute('aria-expanded', 'false');
+function nextTheme() {
+  const current = document.documentElement.dataset.theme;
+  const index = THEME_ORDER.indexOf(current);
+  const next = THEME_ORDER[(index + 1) % THEME_ORDER.length];
+  setTheme(next);
+  saveValue('theme', next);
+  announce(`Palette ${THEMES[next].label}.`);
 }
 
 function setTheme(theme) {
@@ -586,17 +650,16 @@ function setTheme(theme) {
   document.documentElement.dataset.theme = selected;
 
   const config = THEMES[selected];
-  els.theme?.setAttribute('aria-label', `Choisir une palette. Palette actuelle : ${config.label}`);
-  els.theme?.setAttribute('title', `Palette : ${config.label}`);
+  els.theme?.setAttribute('aria-label', `Changer de palette. Palette actuelle : ${config.label}`);
+  els.theme?.setAttribute('title', `Palette suivante (T) · actuelle : ${config.label}`);
 
-  for (const button of els.paletteMenu?.querySelectorAll('[data-theme-choice]') ?? []) {
+  for (const button of els.paletteChoice?.querySelectorAll('[data-theme-choice]') ?? []) {
     const active = button.dataset.themeChoice === selected;
     button.classList.toggle('is-active', active);
     button.setAttribute('aria-checked', String(active));
   }
 
-  const metaTheme = document.querySelector('meta[name="theme-color"]');
-  metaTheme?.setAttribute('content', config.themeColor);
+  els.themeColor?.setAttribute('content', config.themeColor);
 }
 
 function todayKey() {

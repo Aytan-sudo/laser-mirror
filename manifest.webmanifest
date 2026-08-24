@@ -1,18 +1,30 @@
 {
   "name": "Laser & Miroirs",
   "short_name": "Laser",
-  "description": "Oriente les miroirs et guide le laser jusqu'au cristal en un minimum de rotations.",
+  "description": "Oriente les miroirs, traverse les bons filtres et guide le laser coloré jusqu'au cristal en un minimum de rotations. Défi du jour, hors ligne, sans dépendance.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f7f2e8",
   "theme_color": "#f7f2e8",
+  "categories": ["games", "puzzle", "casual"],
   "icons": [
     {
-      "src": "./icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

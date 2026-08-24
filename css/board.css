@@ -449,23 +449,13 @@ h1 {
 
 /* -------------------------------------------------------- choix de palette */
 
-.palette-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 30;
-  width: min(18rem, calc(100vw - 28px));
+.palette-choice {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 5px;
-  padding: 7px;
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-  border-radius: 14px;
-  background: var(--panel);
-  box-shadow: 0 14px 34px color-mix(in srgb, var(--text) 18%, transparent);
 }
 
-.palette-menu button {
+.palette-choice button {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -481,16 +471,16 @@ h1 {
   cursor: pointer;
 }
 
-.palette-menu button:hover {
+.palette-choice button:hover {
   background: var(--panel-soft);
 }
 
-.palette-menu button.is-active {
+.palette-choice button.is-active {
   background: var(--accent-soft);
   color: var(--text);
 }
 
-.palette-menu button:focus-visible {
+.palette-choice button:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 44%, transparent);
   outline-offset: 1px;
 }
@@ -721,12 +711,6 @@ h1 {
 
 .win-mark {
   text-shadow: 0 0 10px var(--crystal-glow);
-}
-
-@media (max-width: 380px) {
-  .palette-menu {
-    width: min(17rem, calc(100vw - 20px));
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

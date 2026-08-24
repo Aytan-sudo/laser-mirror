@@ -2,6 +2,22 @@
 
 Petit puzzle optique statique pour navigateur. Le laser est visible en permanence : chaque clic fait pivoter un miroir entre `/` et `\`. Le but est d'atteindre le cristal en aussi peu de rotations que possible.
 
+## Version 1.4
+
+- dialogue **Options** : palette, sons, vibration et numéro de version ;
+- **sons de synthèse** en option — clic de verre à la rotation, note grave sur
+  un miroir verrouillé, accord à la victoire, accord prolongé au PAR ;
+- **vibration** en option sur mobile ;
+- **partage du résultat** : une fois le cristal atteint, le bouton copie le
+  score en emojis plutôt que le seul lien ;
+- palette posée avant le premier pixel : plus de clignotement au chargement ;
+- palette suivante au raccourci `T` ; le choix direct vit dans les Options ;
+- icônes PNG 180/192/512 dans `assets/` — l'écran d'accueil iOS n'est plus
+  dégradé ;
+- service worker **réseau d'abord** et cache nommé `laser-mirror-1.4.0` ;
+- tests structurels : coquille complète, identifiants de la page, palettes
+  complètes, concordance des trois versions.
+
 ## Version 1.3
 
 - grille 6 × 6 ;
@@ -16,7 +32,7 @@ Petit puzzle optique statique pour navigateur. Le laser est visible en permanenc
 - générateur calibré : le `PAR` visé est le minimum réel, les raccourcis sont coupés par les filtres ;
 - trois difficultés ;
 - défi quotidien déterministe ;
-- adresse synchronisée avec la grille affichée, et bouton « Partager » qui copie le lien ;
+- adresse synchronisée avec la grille affichée, et bouton « Partager » ;
 - statistiques locales : parties terminées, taux au PAR, écart moyen et séries quotidiennes ;
 - lecture animée d'une solution optimale après la victoire ;
 - reprise de la partie via `localStorage` ;
@@ -36,7 +52,18 @@ Les seeds sont déterministes : une même seed et une même difficulté produise
 
 ## Partage
 
-L'adresse décrit toujours la grille affichée : `?seed=…&niveau=…` pour un puzzle libre, `?jour=AAAA-MM-JJ` pour le défi quotidien. Recharger la page redonne donc le même puzzle, et « Partager » se contente de copier ce lien.
+L'adresse décrit toujours la grille affichée : `?seed=…&niveau=…` pour un puzzle libre, `?jour=AAAA-MM-JJ` pour le défi quotidien. Recharger la page redonne donc le même puzzle.
+
+« Partager » copie un texte compact. Avant la victoire, une invitation et le lien ; après, le résultat en emojis — le PAR en carrés de la couleur du laser, les rotations en trop en carrés blancs :
+
+```
+Laser & Miroirs 24/08/2026
+7 rotations · PAR 5
+🟥🟥🟥🟥🟥⬜⬜💎
+https://aytan-sudo.github.io/laser-mirror/?jour=2026-08-24
+```
+
+Le lien ne porte jamais le score ni la solution : seulement de quoi refabriquer la même grille chez le destinataire.
 
 Un lien du jour rouvert un autre jour redonne la même grille, mais hors mode quotidien : la série ne compte que le défi joué le jour même.
 
@@ -46,11 +73,16 @@ Un lien du jour rouvert un autre jour redonne la même grille, mais hors mode qu
 - `js/generator.js` : génération et calibration des puzzles ;
 - `js/rng.js` : RNG déterministe ;
 - `js/storage.js` : stockage local avec fallback mémoire ;
+- `js/config.js` : la version du jeu et l'adresse publique, rien d'autre ;
+- `js/share.js` : lien et résumé de partage, testable sans navigateur ;
+- `js/sound.js` : les quatre timbres de synthèse WebAudio ;
 - `js/app.js` : interface, défi quotidien, partage, statistiques et état de partie ;
 - `css/palettes.css` : les six palettes, et rien d'autre ;
 - `css/board.css` : géométrie et habillage du plateau, sans aucune teinte en dur ;
 - `css/features.css` : éléments optiques et écrans annexes (filtres, cadenas, défi du jour, statistiques, partage) ;
-- `tests/` : tests Node du moteur et du générateur.
+- `tests/` : tests Node du moteur, du générateur, du partage, et les vérifications structurelles de la page.
+
+Le code interne reste en anglais, comme au premier jour du jeu : la convention française du dossier ne vaut que pour les jeux nouveaux, et mélanger les deux au sein d'un même moteur coûterait plus que ça ne rapporte.
 
 Le moteur est indépendant du DOM et peut être testé seul.
 
@@ -59,15 +91,10 @@ Le moteur est indépendant du DOM et peut être testé seul.
 ```bash
 npm test
 npm run check
+npm run serve
 ```
 
-Pour jouer localement, servir le dossier avec n'importe quel serveur HTTP statique, par exemple :
-
-```bash
-python3 -m http.server 8000
-```
-
-Puis ouvrir `http://localhost:8000`.
+`npm run serve` ouvre le dossier sur `http://localhost:8765`. Ce port est partagé par les autres jeux du dossier : si un module semble venir d'ailleurs, vider le cache du navigateur pour `localhost:8765`, ou servir sur un autre port.
 
 ## Contrôles
 
@@ -75,4 +102,16 @@ Puis ouvrir `http://localhost:8000`.
 - les miroirs avec cadenas ne peuvent pas être tournés ;
 - `R` : recommencer le puzzle ;
 - `N` : nouveau puzzle ;
+- `T` : palette suivante ;
+- `Échap` : ferme le dialogue ouvert ;
 - Tab + Entrée/Espace : contrôle clavier standard des miroirs.
+
+## Ce qui n'est pas là
+
+- **Pas d'annulation.** Une rotation s'annule en retournant le même miroir, et
+  le compteur doit en garder la trace : c'est le prix du PAR.
+- **Pas d'indice.** Le PAR est affiché dès le départ ; la solution optimale ne
+  se montre qu'après la victoire, et elle ne compte pas comme une aide.
+- **Pas de minuterie.** Le jeu se mesure en rotations, pas en secondes.
+- **Pas de compte, pas de serveur, pas d'octet qui sort de la machine.** Le
+  défi du jour se refabrique chez chacun à partir de la date.

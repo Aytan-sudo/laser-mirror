@@ -206,12 +206,8 @@
 
 /* Statistiques et dialogue de victoire enrichi. */
 
-.dialog-actions--three {
+.dialog-actions--four {
   grid-template-columns: 1fr 1fr;
-}
-
-.dialog-actions--three #win-new {
-  grid-column: 1 / -1;
 }
 
 .stats-dialog {
@@ -323,4 +319,103 @@
 @media (max-width: 380px), (max-height: 700px) {
   .seed-row { gap: 8px; }
   .seed-label { font-size: .64rem; padding: 2px 8px; }
+}
+
+/* ------------------------------------------------------- Dialogue Options */
+
+.options-dialog {
+  width: min(calc(100% - 28px), 27rem);
+  text-align: left;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.options-dialog h2 {
+  margin: 0;
+}
+
+.options-dialog h3 {
+  margin: 18px 0 8px;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: .075em;
+}
+
+.icon-button--plain {
+  width: 34px;
+  height: 34px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.icon-button--plain:hover {
+  border-color: transparent;
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 11px;
+  background: var(--panel-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 56%, transparent);
+  cursor: pointer;
+}
+
+.option + .option {
+  margin-top: 6px;
+}
+
+.option input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--accent);
+}
+
+.option span {
+  display: block;
+  min-width: 0;
+}
+
+.option strong {
+  display: block;
+  font-size: .88rem;
+  font-weight: 740;
+}
+
+.option small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: .74rem;
+  line-height: 1.35;
+}
+
+.version {
+  margin: 18px 0 12px;
+  color: var(--muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: .7rem;
+  text-align: center;
+}
+
+.options-dialog .primary-button {
+  width: 100%;
 }
