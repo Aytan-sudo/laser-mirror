@@ -2,6 +2,11 @@
 
 Petit puzzle optique statique pour navigateur. Le laser est visible en permanence : chaque clic fait pivoter un miroir entre `/` et `\`. Le but est d'atteindre le cristal en aussi peu de rotations que possible.
 
+## Version 1.4.1
+
+- les cibles tactiles de l'interface passent à 44 px (boutons d'en-tête,
+  boutons texte, listes déroulantes), conformément à la convention.
+
 ## Version 1.4
 
 - dialogue **Options** : palette, sons, vibration et numéro de version ;

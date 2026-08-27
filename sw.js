@@ -3,7 +3,7 @@
 // cache suit la version du jeu, si bien qu'une mise à jour ne conserve jamais
 // un ancien moteur.
 
-const VERSION = 'laser-mirror-1.4.0';
+const VERSION = 'laser-mirror-1.4.1';
 const SHELL = [
   './',
   'index.html',
