@@ -1,55 +1,11 @@
 /* Laser & Miroirs — éléments optiques et écrans annexes :
-   filtres colorés, miroirs verrouillés, défi du jour, statistiques, partage. */
+   filtres colorés, cristal teinté, dialogues, partage, options. */
 
-.utility-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.utility-button {
-  min-height: 44px;
-  border: 0;
-  border-radius: 11px;
-  background: var(--panel-soft);
-  color: var(--muted);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 62%, transparent);
-  font: inherit;
-  font-size: .82rem;
-  font-weight: 720;
-  cursor: pointer;
-  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
-}
-
-.utility-button:hover {
-  color: var(--text);
-  background: color-mix(in srgb, var(--panel-soft) 82%, var(--panel));
-}
-
-.utility-button:active {
-  transform: translateY(1px);
-}
-
-.utility-button.is-active {
-  color: var(--accent);
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
-}
-
-.utility-button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 46%, transparent);
-  outline-offset: 2px;
-}
-
-.daily-badge {
-  margin: -4px 0 0;
-  text-align: center;
-  color: var(--accent);
-  font-size: .72rem;
-  font-weight: 720;
-}
-
-/* Le rayon garde la même douceur graphique, mais la couleur devient une règle. */
+/* ------------------------------------------------------ couleur du rayon */
+/* La couleur du laser est une règle du jeu, pas une décoration : elle décide
+   quels filtres laissent passer et quel cristal accepte. Les teintes elles-
+   mêmes appartiennent à la palette — un rouge de banc d'optique n'est pas un
+   rouge de papier. */
 
 .board[data-laser-color="red"] {
   --active-beam: var(--beam-red);
@@ -69,31 +25,11 @@
   --active-beam-glow: var(--beam-yellow-glow);
 }
 
-.board .beam-glow {
-  stroke: var(--active-beam);
-  opacity: .2;
-}
-
-.board .beam {
-  stroke: var(--active-beam);
-  filter: drop-shadow(0 0 1px var(--active-beam-hot));
-}
-
-.board .emitter {
-  fill: var(--active-beam-hot);
-  stroke: var(--active-beam);
-  filter: drop-shadow(0 0 2px var(--active-beam));
-}
-
-.board.is-hit .beam {
-  stroke: var(--active-beam-hot);
-}
-
-.board.is-blocked .beam {
-  opacity: .86;
-}
-
-/* Filtres colorés. La lettre évite de rendre la règle dépendante de la seule couleur. */
+/* --------------------------------------------------------------- filtres */
+/* Une vitre teintée, posée au-dessus du faisceau : sa translucidité fait tout
+   le travail, le rayon se voit à travers et prend sa couleur. La lettre reste
+   au centre — la règle ne doit pas dépendre de la seule couleur — mais elle
+   n'est plus le dessin, seulement sa redondance. */
 
 .filter-cell {
   z-index: 4;
@@ -101,20 +37,37 @@
   place-items: center;
 }
 
-.filter-disc {
-  width: 47%;
-  aspect-ratio: 1;
+.filter-pane {
+  position: relative;
   display: grid;
   place-items: center;
-  border-radius: 28%;
-  border: 1px solid color-mix(in srgb, currentColor 44%, var(--panel));
-  background: color-mix(in srgb, currentColor 17%, var(--panel));
+  width: 76%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  border: 1.5px solid color-mix(in srgb, currentColor 68%, transparent);
+  /* Le verre : une teinte translucide — le rayon se voit au travers et en
+     prend la couleur — plus un éclat oblique, fin, qui dit la surface. */
+  background:
+    linear-gradient(132deg,
+      color-mix(in srgb, white 20%, transparent) 0 26%,
+      transparent 26% 44%,
+      color-mix(in srgb, white 9%, transparent) 44% 54%,
+      transparent 54%),
+    color-mix(in srgb, currentColor 24%, transparent);
   box-shadow:
-    0 2px 5px color-mix(in srgb, var(--text) 8%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 34%, transparent);
-  font-size: clamp(.62rem, 2.7vw, .82rem);
+    0 1px 5px color-mix(in srgb, black 32%, transparent),
+    inset 0 0 8px color-mix(in srgb, currentColor 30%, transparent);
+}
+
+/* La lettre reste : la règle ne doit pas dépendre de la seule couleur. Elle
+   est au centre du verre, teintée comme lui, et non plus dans une pastille
+   posée en coin qui découpait la vitre en quartiers. */
+.filter-pane span {
+  color: color-mix(in srgb, currentColor 80%, var(--text));
+  font-size: clamp(0.62rem, 2.9vw, 0.9rem);
   font-weight: 820;
   line-height: 1;
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--panel-soft) 80%, transparent);
 }
 
 .filter-cell[data-filter-color="red"] {
@@ -129,86 +82,102 @@
   color: var(--beam-yellow);
 }
 
-/* Le cristal reprend la couleur exigée tout en gardant son rendu de pierre polie. */
+/* --------------------------------------------------------------- cristal */
+/* Le cristal porte la couleur qu'il exige : on doit pouvoir lire « il faut du
+   bleu » sans ouvrir les règles. */
 
 .target-cell[data-color="red"] {
-  --target-color: var(--beam-red);
-  --target-light: #efb3ad;
+  --crystal: var(--beam-red);
+  --crystal-light: var(--beam-red-hot);
+  --crystal-glow: var(--beam-red-glow);
 }
 
 .target-cell[data-color="blue"] {
-  --target-color: var(--beam-blue);
-  --target-light: #b8d1e8;
+  --crystal: var(--beam-blue);
+  --crystal-light: var(--beam-blue-hot);
+  --crystal-glow: var(--beam-blue-glow);
 }
 
 .target-cell[data-color="yellow"] {
-  --target-color: var(--beam-yellow);
-  --target-light: #ead59e;
+  --crystal: var(--beam-yellow);
+  --crystal-light: var(--beam-yellow-hot);
+  --crystal-glow: var(--beam-yellow-glow);
 }
 
-.target-cell .crystal {
-  border-color: color-mix(in srgb, var(--target-light) 76%, var(--target-color));
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--target-light) 90%, white),
-    var(--target-color) 48%,
-    color-mix(in srgb, var(--target-color) 70%, var(--text))
-  );
-  box-shadow:
-    0 0 8px color-mix(in srgb, var(--target-color) 24%, transparent),
-    inset 0 1px 4px color-mix(in srgb, white 52%, transparent);
+/* -------------------------------------------------------------- dialogues */
+
+.win-dialog {
+  width: min(calc(100% - 28px), 25rem);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.5);
+  text-align: center;
 }
 
-.board.is-hit .target-cell .crystal {
-  box-shadow:
-    0 0 15px 3px color-mix(in srgb, var(--target-color) 30%, transparent),
-    inset 0 1px 5px color-mix(in srgb, white 58%, transparent);
+.win-dialog::backdrop {
+  background: rgba(4, 6, 10, 0.62);
+  backdrop-filter: blur(2px);
 }
 
-/* Miroir verrouillé : même objet, mais son petit cadenas est dessiné en CSS. */
-
-.mirror--locked {
-  cursor: default;
+.win-mark {
+  margin: 0 auto 8px;
+  color: var(--crystal);
+  font-size: 2.4rem;
+  text-shadow: 0 0 16px var(--crystal-glow);
 }
 
-.mirror--locked::before {
-  opacity: .84;
+.win-dialog h2 {
+  margin: 0;
+  font-size: 1.45rem;
 }
 
-.mirror--locked .mirror-bar {
-  opacity: .8;
+.win-result {
+  margin: 10px 0 4px;
+  font-size: 1.05rem;
+  font-weight: 760;
 }
 
-.mirror-lock {
-  position: absolute;
-  z-index: 5;
-  right: 16%;
-  bottom: 15%;
-  width: 15%;
-  min-width: 9px;
-  aspect-ratio: .9;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--metal) 76%, var(--panel));
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 16%, transparent);
+.win-detail {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
-.mirror-lock::before {
-  content: "";
-  position: absolute;
-  left: 20%;
-  right: 20%;
-  bottom: 72%;
-  height: 70%;
-  border: 1.5px solid color-mix(in srgb, var(--metal) 80%, var(--text));
-  border-bottom: 0;
-  border-radius: 999px 999px 0 0;
-}
-
-/* Statistiques et dialogue de victoire enrichi. */
-
-.dialog-actions--four {
+.dialog-actions {
+  display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.icon-button--plain {
+  width: 44px;
+  height: 44px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.icon-button--plain:hover {
+  border-color: transparent;
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------- statistiques */
 
 .stats-dialog {
   width: min(calc(100% - 28px), 27rem);
@@ -238,7 +207,7 @@
   padding: 11px 12px;
   border-radius: 11px;
   background: var(--panel-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 56%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
   text-align: left;
 }
 
@@ -260,80 +229,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 380px), (max-height: 700px) {
-  .utility-button {
-    min-height: 44px;
-    font-size: .76rem;
-  }
-
-  .daily-badge {
-    font-size: .68rem;
-  }
-
-  .filter-disc {
-    width: 43%;
-  }
-
-  .micro-help {
-    font-size: .68rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .utility-button {
-    transition-duration: 1ms;
-  }
-}
-
-/* ------------------------------------------------- Partage et seed visible */
-.seed-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: -2px;
-}
-
-.seed-row .utility-button {
-  min-height: 44px;
-  padding: 0 12px;
-  font-size: .74rem;
-}
-
-.seed-label {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: .68rem;
-  letter-spacing: .01em;
-  color: var(--muted);
-  background: var(--panel-soft);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 10px;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 380px), (max-height: 700px) {
-  .seed-row { gap: 8px; }
-  .seed-label { font-size: .64rem; padding: 2px 8px; }
-}
-
-/* ------------------------------------------------------- Dialogue Options */
+/* ------------------------------------------------------- dialogue Options */
 
 .options-dialog {
   width: min(calc(100% - 28px), 27rem);
   text-align: left;
-}
-
-.dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 4px;
 }
 
 .options-dialog h2 {
@@ -349,21 +249,74 @@
   letter-spacing: .075em;
 }
 
-.icon-button--plain {
-  width: 44px;
-  height: 44px;
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-  color: var(--muted);
-  font-size: 1.3rem;
-  line-height: 1;
+.palette-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
 }
 
-.icon-button--plain:hover {
-  border-color: transparent;
-  background: var(--panel-soft);
+.palette-choice button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
   color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 680;
+  text-align: left;
+  cursor: pointer;
+}
+
+.palette-choice button:hover {
+  background: var(--panel-soft);
+}
+
+.palette-choice button.is-active {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.palette-choice button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 1px;
+}
+
+.palette-swatch {
+  flex: 0 0 auto;
+  width: 25px;
+  height: 25px;
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, white 18%, transparent);
+}
+
+.swatch-chambre-noire {
+  background: conic-gradient(#0a0c10 0 34%, #5ad3e6 34% 67%, #ff4d5e 67%);
+}
+
+.swatch-nuit {
+  background: conic-gradient(#16120e 0 34%, #e0a44e 34% 67%, #57b6e8 67%);
+}
+
+.swatch-crepuscule {
+  background: conic-gradient(#19151b 0 34%, #c98fae 34% 67%, #7fc0c8 67%);
+}
+
+.swatch-sable {
+  background: conic-gradient(#f7f2e8 0 34%, #c1712c 34% 67%, #1f6fb5 67%);
+}
+
+.swatch-ardoise {
+  background: conic-gradient(#edf1f4 0 34%, #3f7ea8 34% 67%, #c8323f 67%);
+}
+
+.swatch-sauge {
+  background: conic-gradient(#f1f2e9 0 34%, #5f7a4c 34% 67%, #21689f 67%);
 }
 
 .option {
@@ -373,7 +326,7 @@
   padding: 9px 10px;
   border-radius: 11px;
   background: var(--panel-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 56%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
   cursor: pointer;
 }
 
@@ -408,6 +361,45 @@
   line-height: 1.35;
 }
 
+/* --------------------------------------------------- cette partie, partage */
+/* La graine et le partage ont quitté la page pour les Options : sous le
+   plateau, ils poussaient l'action principale hors de l'écran. */
+
+.seed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.seed-row .secondary-button {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  font-size: .78rem;
+}
+
+.seed-label {
+  flex: 1 1 8rem;
+  min-width: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: .68rem;
+  color: var(--muted);
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.micro-help {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.45;
+}
+
 .version {
   margin: 18px 0 12px;
   color: var(--muted);
@@ -418,4 +410,22 @@
 
 .options-dialog .primary-button {
   width: 100%;
+}
+
+@media (max-width: 380px), (max-height: 700px) {
+  .filter-pane {
+    width: 74%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-button,
+.difficulty button,
+.mirror::before,
+.mirror-bar,
+.crystal,
+.primary-button,
+.secondary-button {
+    transition-duration: 1ms;
+  }
 }

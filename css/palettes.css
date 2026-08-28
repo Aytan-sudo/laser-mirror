@@ -1,21 +1,171 @@
 /* Laser & Miroirs — les six palettes, et rien d'autre.
    Chaque bloc définit l'intégralité des variables : aucune ambiance n'hérite
-   des couleurs d'une autre. */
+   des couleurs d'une autre.
+
+   Trois sombres, trois claires. La sombre est le visage par défaut : un rayon
+   est une émission, il n'existe que contre du noir. Les claires restent, mais
+   elles assument autre chose — le rayon y devient un tracé d'encre, avec une
+   ombre colorée portée, plutôt qu'une lumière qui n'arrive pas.
+
+   La couleur du rayon appartient à la palette. Jusqu'à la v1.4 elle vivait
+   dans un `:root` unique, réglée pour le papier : sur les ambiances sombres,
+   le bleu #4f82b8 rendait un denim terne au lieu d'un faisceau. */
 
 :root {
   --radius: 14px;
 }
 
-/* ------------------------------------------------------------------ Sable */
+/* --------------------------------------------------------- Chambre noire */
+/* Le banc d'optique, lampe éteinte. Tout est gris ; la seule couleur saturée
+   de l'écran est le rayon lui-même. C'est la palette servie sans attribut :
+   un joueur sans préférence enregistrée doit voir celle-là au premier pixel,
+   sinon la page s'ouvre dans une ambiance et bascule dans une autre. */
 
 :root,
+:root[data-theme="chambre-noire"] {
+  color-scheme: dark;
+  --bg: #0a0c10;
+  --panel: #141820;
+  --panel-soft: #101419;
+  --cell: #10141a;
+  --cell-alt: #0d1116;
+  --text: #e6ecf4;
+  --muted: #8593a4;
+  --border: #1e2530;
+  --border-vivid: #2c3644;
+  --accent: #5ad3e6;
+  --accent-soft: #0f2a30;
+  --accent-text: #04161a;
+  --success: #4fd6a5;
+  --shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+  --board-rim: #171c24;
+  --mirror-mount: #1a1f27;
+  --mirror-mount-edge: #2b323d;
+  --mirror-face: #b9c4d1;
+  --mirror-face-edge: #7d8896;
+  --mirror-spec: #ffffff;
+  --metal: #6f7c8b;
+  --metal-light: #aab6c3;
+  --crystal: #5ad3e6;
+  --crystal-light: #c4f2fa;
+  --crystal-glow: rgba(90, 211, 230, 0.5);
+  --beam-red: #ff4d5e;
+  --beam-red-hot: #ffb3bb;
+  --beam-red-glow: rgba(255, 77, 94, 0.55);
+  --beam-blue: #4aa8ff;
+  --beam-blue-hot: #b3daff;
+  --beam-blue-glow: rgba(74, 168, 255, 0.55);
+  --beam-yellow: #ffc233;
+  --beam-yellow-hot: #ffe6a3;
+  --beam-yellow-glow: rgba(255, 194, 51, 0.55);
+  --beam-core: #ffffff;
+  --core-opacity: 0.9;
+  --bloom: 0.68;
+  --beam-blend: screen;
+}
+
+/* ------------------------------------------------------------------- Nuit */
+/* Le même banc, à la lampe à huile : bois, laiton, chaleur. */
+
+:root[data-theme="nuit"] {
+  color-scheme: dark;
+  --bg: #16120e;
+  --panel: #221c16;
+  --panel-soft: #1c1712;
+  --cell: #1f1912;
+  --cell-alt: #1b160f;
+  --text: #f6ecdf;
+  --muted: #a89684;
+  --border: #302620;
+  --border-vivid: #4a3c2c;
+  --accent: #e0a44e;
+  --accent-soft: #3a2a12;
+  --accent-text: #1d1408;
+  --success: #69b596;
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.5);
+  --board-rim: #241d16;
+  --mirror-mount: #272019;
+  --mirror-mount-edge: #453a2c;
+  --mirror-face: #d3c7b2;
+  --mirror-face-edge: #96866e;
+  --mirror-spec: #fffaf0;
+  --metal: #8b7d6a;
+  --metal-light: #c3b49c;
+  --crystal: #78c5d2;
+  --crystal-light: #d2f0f5;
+  --crystal-glow: rgba(120, 197, 210, 0.45);
+  --beam-red: #ff6a53;
+  --beam-red-hot: #ffc0ae;
+  --beam-red-glow: rgba(255, 106, 83, 0.5);
+  --beam-blue: #57b6e8;
+  --beam-blue-hot: #bde3f7;
+  --beam-blue-glow: rgba(87, 182, 232, 0.5);
+  --beam-yellow: #ffcf5c;
+  --beam-yellow-hot: #ffedb8;
+  --beam-yellow-glow: rgba(255, 207, 92, 0.5);
+  --beam-core: #fff6e8;
+  --core-opacity: 0.9;
+  --bloom: 0.5;
+  --beam-blend: screen;
+}
+
+/* ------------------------------------------------------------- Crépuscule */
+/* Violet fumé : la fin du jour par la fenêtre de l'atelier. */
+
+:root[data-theme="crepuscule"] {
+  color-scheme: dark;
+  --bg: #19151b;
+  --panel: #241f26;
+  --panel-soft: #1e1920;
+  --cell: #221d24;
+  --cell-alt: #1e1a20;
+  --text: #f1e8ef;
+  --muted: #aa98a5;
+  --border: #332b35;
+  --border-vivid: #4c3f4f;
+  --accent: #c98fae;
+  --accent-soft: #392932;
+  --accent-text: #1d141a;
+  --success: #72b09d;
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.5);
+  --board-rim: #261f28;
+  --mirror-mount: #29222b;
+  --mirror-mount-edge: #473b49;
+  --mirror-face: #d2c7da;
+  --mirror-face-edge: #8f8095;
+  --mirror-spec: #fdf7ff;
+  --metal: #8c7e91;
+  --metal-light: #c0b3c4;
+  --crystal: #7fc0c8;
+  --crystal-light: #d3eef1;
+  --crystal-glow: rgba(127, 192, 200, 0.45);
+  --beam-red: #ff617a;
+  --beam-red-hot: #ffb8c5;
+  --beam-red-glow: rgba(255, 97, 122, 0.5);
+  --beam-blue: #6aa8ff;
+  --beam-blue-hot: #c2daff;
+  --beam-blue-glow: rgba(106, 168, 255, 0.5);
+  --beam-yellow: #ffc46b;
+  --beam-yellow-hot: #ffe8bd;
+  --beam-yellow-glow: rgba(255, 196, 107, 0.5);
+  --beam-core: #fff2fb;
+  --core-opacity: 0.9;
+  --bloom: 0.5;
+  --beam-blend: screen;
+}
+
+/* ------------------------------------------------------------------ Sable */
+/* Le papier d'atelier. Le rayon n'y ment plus : trait franc d'encre saturée,
+   cœur pâle en guise de brillance, et une ombre colorée portée au lieu d'un
+   halo — un `multiply` sur de la crème assombrit, il ne rayonne pas. */
+
 :root[data-theme="sable"] {
   color-scheme: light;
   --bg: #f7f2e8;
   --panel: #fffdf8;
   --panel-soft: #f1ead9;
   --cell: #f7f1e7;
-  --cell-alt: #f4ecdf;
+  --cell-alt: #f3ecdf;
   --text: #3d3527;
   --muted: #7a6f5d;
   --border: #e2d8c6;
@@ -23,22 +173,36 @@
   --accent: #c1712c;
   --accent-soft: #f6e5d0;
   --accent-text: #ffffff;
-  --laser: #d86154;
-  --laser-hot: #e88b7d;
-  --laser-glow: rgba(216, 97, 84, 0.18);
-  --metal: #756f67;
-  --metal-light: #f4f0e9;
-  --crystal: #5796a7;
-  --crystal-light: #b9dce2;
-  --crystal-glow: rgba(87, 150, 167, 0.22);
   --success: #2f856e;
   --shadow: 0 14px 34px rgba(61, 53, 39, 0.13);
   --board-rim: #d4c7b2;
-  --mirror-disc: #eee7dc;
-  --mirror-disc-edge: #ded4c4;
+  --mirror-mount: #efe8dd;
+  --mirror-mount-edge: #d7cbb7;
+  --mirror-face: #8d949c;
+  --mirror-face-edge: #5f666e;
+  --mirror-spec: #ffffff;
+  --metal: #756f67;
+  --metal-light: #b4ada2;
+  --crystal: #3f8fa3;
+  --crystal-light: #a8dbe6;
+  --crystal-glow: rgba(63, 143, 163, 0.3);
+  --beam-red: #cc2f3f;
+  --beam-red-hot: #e86270;
+  --beam-red-glow: rgba(204, 47, 63, 0.3);
+  --beam-blue: #1f6fb5;
+  --beam-blue-hot: #5ba0d8;
+  --beam-blue-glow: rgba(31, 111, 181, 0.3);
+  --beam-yellow: #b8801a;
+  --beam-yellow-hot: #dfae4c;
+  --beam-yellow-glow: rgba(184, 128, 26, 0.3);
+  --beam-core: #fffdf8;
+  --core-opacity: 0.22;
+  --bloom: 0.3;
+  --beam-blend: multiply;
 }
 
 /* --------------------------------------------------------------- Ardoise */
+/* Le bleu de plan : gris froid, tracé d'ingénieur. */
 
 :root[data-theme="ardoise"] {
   color-scheme: light;
@@ -51,25 +215,39 @@
   --muted: #71818c;
   --border: #d5dde2;
   --border-vivid: #bcc8cf;
-  --accent: #607f98;
+  --accent: #3f7ea8;
   --accent-soft: #dde8ee;
   --accent-text: #ffffff;
-  --laser: #d66c64;
-  --laser-hot: #e88d85;
-  --laser-glow: rgba(214, 108, 100, 0.17);
-  --metal: #687780;
-  --metal-light: #eef2f4;
-  --crystal: #579caf;
-  --crystal-light: #b8d8df;
-  --crystal-glow: rgba(87, 156, 175, 0.20);
   --success: #397f72;
   --shadow: 0 14px 34px rgba(52, 66, 77, 0.12);
   --board-rim: #cbd5da;
-  --mirror-disc: #e3e9ec;
-  --mirror-disc-edge: #cfd9de;
+  --mirror-mount: #e7edf0;
+  --mirror-mount-edge: #ccd6dc;
+  --mirror-face: #7d8892;
+  --mirror-face-edge: #545e68;
+  --mirror-spec: #ffffff;
+  --metal: #687780;
+  --metal-light: #a5b1ba;
+  --crystal: #2f88a5;
+  --crystal-light: #a5d8e6;
+  --crystal-glow: rgba(47, 136, 165, 0.3);
+  --beam-red: #c8323f;
+  --beam-red-hot: #e26875;
+  --beam-red-glow: rgba(200, 50, 63, 0.3);
+  --beam-blue: #1a6bb0;
+  --beam-blue-hot: #559dd4;
+  --beam-blue-glow: rgba(26, 107, 176, 0.3);
+  --beam-yellow: #ab7a15;
+  --beam-yellow-hot: #d3a743;
+  --beam-yellow-glow: rgba(171, 122, 21, 0.3);
+  --beam-core: #fafbfc;
+  --core-opacity: 0.22;
+  --bloom: 0.3;
+  --beam-blend: multiply;
 }
 
 /* ------------------------------------------------------------------ Sauge */
+/* Vert-gris d'herbier : la même épure, sur un papier plus doux. */
 
 :root[data-theme="sauge"] {
   color-scheme: light;
@@ -77,157 +255,38 @@
   --panel: #fafbf4;
   --panel-soft: #e6e9dc;
   --cell: #f4f5ed;
-  --cell-alt: #eef1e7;
+  --cell-alt: #eff1e8;
   --text: #394034;
   --muted: #727966;
   --border: #d9ddcb;
   --border-vivid: #c1c9b3;
-  --accent: #71835b;
+  --accent: #5f7a4c;
   --accent-soft: #e3e8d7;
   --accent-text: #ffffff;
-  --laser: #cc6e5b;
-  --laser-hot: #df8c79;
-  --laser-glow: rgba(204, 110, 91, 0.17);
-  --metal: #73796d;
-  --metal-light: #f1f3ec;
-  --crystal: #669ba0;
-  --crystal-light: #b9d7d6;
-  --crystal-glow: rgba(102, 155, 160, 0.20);
   --success: #577d5d;
   --shadow: 0 14px 34px rgba(57, 64, 52, 0.12);
   --board-rim: #cbd2bd;
-  --mirror-disc: #e7eadf;
-  --mirror-disc-edge: #d3d8c9;
+  --mirror-mount: #e9ece0;
+  --mirror-mount-edge: #d0d6c4;
+  --mirror-face: #828a7c;
+  --mirror-face-edge: #59614f;
+  --mirror-spec: #ffffff;
+  --metal: #73796d;
+  --metal-light: #a8ad9f;
+  --crystal: #3f8b8f;
+  --crystal-light: #aad7d6;
+  --crystal-glow: rgba(63, 139, 143, 0.3);
+  --beam-red: #c53240;
+  --beam-red-hot: #e26974;
+  --beam-red-glow: rgba(197, 50, 64, 0.3);
+  --beam-blue: #21689f;
+  --beam-blue-hot: #5e9ac9;
+  --beam-blue-glow: rgba(33, 104, 159, 0.3);
+  --beam-yellow: #a97c18;
+  --beam-yellow-hot: #cfa844;
+  --beam-yellow-glow: rgba(169, 124, 24, 0.3);
+  --beam-core: #fafbf4;
+  --core-opacity: 0.22;
+  --bloom: 0.3;
+  --beam-blend: multiply;
 }
-
-/* ------------------------------------------------------------------- Rose */
-
-:root[data-theme="rose"] {
-  color-scheme: light;
-  --bg: #f8eff1;
-  --panel: #fffafb;
-  --panel-soft: #f0e0e5;
-  --cell: #faf3f5;
-  --cell-alt: #f5eaee;
-  --text: #49363e;
-  --muted: #826a73;
-  --border: #ead7dd;
-  --border-vivid: #d8bac4;
-  --accent: #a85b70;
-  --accent-soft: #f3dfe5;
-  --accent-text: #ffffff;
-  --laser: #d86462;
-  --laser-hot: #e78b88;
-  --laser-glow: rgba(216, 100, 98, 0.17);
-  --metal: #7b6d72;
-  --metal-light: #f6eff1;
-  --crystal: #6c9ba9;
-  --crystal-light: #c1dbe2;
-  --crystal-glow: rgba(108, 155, 169, 0.20);
-  --success: #557d70;
-  --shadow: 0 14px 34px rgba(73, 54, 62, 0.12);
-  --board-rim: #dec8cf;
-  --mirror-disc: #eee2e6;
-  --mirror-disc-edge: #decbd1;
-}
-
-/* ------------------------------------------------------------------- Nuit */
-
-:root[data-theme="nuit"] {
-  color-scheme: dark;
-  --bg: #16120e;
-  --panel: #221c16;
-  --panel-soft: #1c1712;
-  --cell: #2b241d;
-  --cell-alt: #272119;
-  --text: #f6ecdf;
-  --muted: #a89684;
-  --border: #3a2f24;
-  --border-vivid: #55452f;
-  --accent: #e0a44e;
-  --accent-soft: #3a2a12;
-  --accent-text: #1d1408;
-  --laser: #dc766a;
-  --laser-hot: #ee9a8d;
-  --laser-glow: rgba(220, 118, 106, 0.17);
-  --metal: #b2a697;
-  --metal-light: #eee2d3;
-  --crystal: #78aab5;
-  --crystal-light: #c0dbe0;
-  --crystal-glow: rgba(120, 170, 181, 0.19);
-  --success: #69b596;
-  --shadow: 0 16px 38px rgba(0, 0, 0, 0.31);
-  --board-rim: #31271f;
-  --mirror-disc: #332b23;
-  --mirror-disc-edge: #4b3f34;
-}
-
-/* ------------------------------------------------------------- Crépuscule */
-
-:root[data-theme="crepuscule"] {
-  color-scheme: dark;
-  --bg: #19151b;
-  --panel: #241f26;
-  --panel-soft: #1e1920;
-  --cell: #2d2730;
-  --cell-alt: #29232b;
-  --text: #f1e8ef;
-  --muted: #aa98a5;
-  --border: #3b323d;
-  --border-vivid: #57475a;
-  --accent: #b8899a;
-  --accent-soft: #392932;
-  --accent-text: #1d141a;
-  --laser: #e17668;
-  --laser-hot: #ef9b8e;
-  --laser-glow: rgba(225, 118, 104, 0.17);
-  --metal: #b7adb6;
-  --metal-light: #ede5ec;
-  --crystal: #74a7ae;
-  --crystal-light: #bfdde0;
-  --crystal-glow: rgba(116, 167, 174, 0.19);
-  --success: #72b09d;
-  --shadow: 0 16px 38px rgba(0, 0, 0, 0.32);
-  --board-rim: #322a34;
-  --mirror-disc: #342d36;
-  --mirror-disc-edge: #4b3e4d;
-}
-
-/* Même respiration et même typographie que les autres petits jeux. */
-
-/* -------------------------------------------------------- choix de palette */
-
-/* Le sélecteur devient une commande segmentée discrète plutôt qu'un cadre. */
-
-/* Le plateau reçoit un cadre rappelant le plateau de 2048.
-   La grille reste au même endroit : aucun impact sur les coordonnées du laser. */
-
-/* Le miroir devient un petit objet mat posé sur le plateau. */
-
-/* Cristal moins néon, davantage pierre polie. */
-
-/* Le rayon reste immédiatement lisible mais cesse d'être un tube néon. */
-
-/* HUD et boutons : surfaces douces, peu de traits. */
-
-:root {
-  --beam-red: #cf5c55;
-  --beam-red-hot: #e58a82;
-  --beam-red-glow: rgba(207, 92, 85, .22);
-  --beam-blue: #4f82b8;
-  --beam-blue-hot: #82add6;
-  --beam-blue-glow: rgba(79, 130, 184, .22);
-  --beam-yellow: #c68c22;
-  --beam-yellow-hot: #e4bd62;
-  --beam-yellow-glow: rgba(198, 140, 34, .22);
-}
-
-/* Le rayon garde la même douceur graphique, mais la couleur devient une règle. */
-
-/* Filtres colorés. La lettre évite de rendre la règle dépendante de la seule couleur. */
-
-/* Le cristal reprend la couleur exigée tout en gardant son rendu de pierre polie. */
-
-/* Miroir verrouillé : même objet, mais son petit cadenas est dessiné en CSS. */
-
-/* Statistiques et dialogue de victoire enrichi. */

@@ -19,7 +19,8 @@ const palettes = read('css/palettes.css');
 const manifest = JSON.parse(read('manifest.webmanifest'));
 const pkg = JSON.parse(read('package.json'));
 
-const THEMES = ['sable', 'ardoise', 'sauge', 'rose', 'nuit', 'crepuscule'];
+// L'ordre compte : la première est le défaut, celle que le CSS sert sans attribut.
+const THEMES = ['chambre-noire', 'nuit', 'crepuscule', 'sable', 'ardoise', 'sauge'];
 
 test('le service worker liste tous les fichiers du jeu', () => {
   const shell = [...worker.matchAll(/^\s+'([^']+)',$/gm)].map(([, path]) => path);
@@ -65,7 +66,7 @@ test('chaque palette définit toutes les variables de la palette de référence'
     assert.notEqual(debut, -1, `la palette ${theme} n'existe pas`);
     return palettes.slice(debut, palettes.indexOf('}', debut));
   };
-  const reference = [...bloc('sable').matchAll(/^\s+(--[\w-]+):/gm)].map(([, nom]) => nom);
+  const reference = [...bloc(THEMES[0]).matchAll(/^\s+(--[\w-]+):/gm)].map(([, nom]) => nom);
   assert.ok(reference.length > 20);
   for (const theme of THEMES.slice(1)) {
     const defines = bloc(theme);
@@ -99,4 +100,34 @@ test('le script inline connaît exactement les palettes disponibles', () => {
   const inline = page.slice(page.indexOf('laser-mirror:theme'));
   for (const theme of THEMES) assert.ok(inline.includes(theme), `${theme} manque au script inline`);
   for (const theme of THEMES) assert.ok(page.includes(`data-theme-choice="${theme}"`), `${theme} manque aux Options`);
+});
+
+test('la palette par défaut est celle que le CSS sert sans attribut', () => {
+  // Le piège que Diamants a payé en v1.3.0 : si le `:root` nu ne porte pas la
+  // palette par défaut, un joueur sans préférence enregistrée voit une ambiance
+  // au premier rendu et une autre juste après. Rien ne lève d'erreur.
+  const defaut = THEMES[0];
+  assert.ok(
+    palettes.includes(`:root,\n:root[data-theme="${defaut}"] {`),
+    `le \`:root\` nu ne sert pas ${defaut}`,
+  );
+  assert.doesNotMatch(page, /<html lang="fr"[^>]*data-theme/, 'la page fige une palette en dur');
+  assert.ok(app.includes(`const DEFAULT_THEME = '${defaut}';`), 'app.js ne connaît pas le même défaut');
+
+  // Et la barre système doit s'ouvrir sur la même couleur que cette palette.
+  const couleur = app.match(new RegExp(`'${defaut}':[^}]*themeColor: '(#[0-9a-f]{6})'`))?.[1];
+  assert.ok(couleur, 'la palette par défaut ne déclare pas sa couleur de barre');
+  assert.equal(manifest.theme_color, couleur);
+  assert.ok(page.includes(`content="${couleur}" id="couleur-barre"`), 'la balise theme-color diverge');
+});
+
+test('le son se commande depuis l’en-tête, comme le veut la convention', () => {
+  // Convention §1 : un bouton d'activation du son à côté des Options. Il a
+  // manqué à Lasers jusqu'à la v1.5.
+  assert.ok(page.includes('id="sound-button"'), 'pas de bouton son dans la page');
+  assert.match(app, /els\.sound\.addEventListener\('click'/, 'le bouton son n’est pas câblé');
+  // Bouton d'en-tête et case des Options doivent passer par le même chemin,
+  // sinon l'un des deux affiche un état faux.
+  assert.match(app, /function setSounds\(/);
+  assert.match(app, /els\.optionSounds\.addEventListener\('change', \(\) => setSounds\(/);
 });

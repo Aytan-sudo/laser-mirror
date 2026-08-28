@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr" data-theme="sable">
+<html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#f7f2e8" id="couleur-barre">
+  <meta name="theme-color" content="#0a0c10" id="couleur-barre">
   <meta name="description" content="Oriente les miroirs, traverse les bons filtres et guide le laser coloré jusqu'au cristal en un minimum de rotations.">
   <title>Laser &amp; Miroirs</title>
   <link rel="manifest" href="manifest.webmanifest">
@@ -14,14 +14,16 @@
   <link rel="stylesheet" href="css/features.css">
   <script>
     // La palette est posée avant le premier pixel : un module différé
-    // ferait charger la page en Sable puis clignoter vers la bonne teinte.
+    // ferait charger la page en Chambre noire puis clignoter vers la bonne
+    // teinte. Sans préférence enregistrée, aucun attribut n'est posé — c'est
+    // le `:root` nu de palettes.css qui sert le défaut, et lui seul.
     try {
       const stored = JSON.parse(localStorage.getItem('laser-mirror:theme') || '""');
-      const migrated = { clair: 'sable', sombre: 'nuit', system: 'sable' }[stored] || stored;
-      if (/^(sable|ardoise|sauge|rose|nuit|crepuscule)$/.test(migrated)) {
+      const migrated = { clair: 'sable', sombre: 'nuit', system: 'sable', rose: 'crepuscule' }[stored] || stored;
+      if (/^(chambre-noire|nuit|crepuscule|sable|ardoise|sauge)$/.test(migrated)) {
         document.documentElement.dataset.theme = migrated;
       }
-    } catch { /* la palette Sable reste lisible */ }
+    } catch { /* la palette Chambre noire reste lisible */ }
   </script>
 </head>
 <body>
@@ -32,8 +34,12 @@
         <h1>Laser &amp; Miroirs</h1>
       </div>
       <div class="topbar-actions">
-        <button id="reset-button" class="icon-button" type="button" aria-label="Recommencer ce puzzle" title="Recommencer (R)">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8 8 0 1 1 1.9 8.2"/><path d="M4 4v5h5"/></svg>
+        <button id="sound-button" class="icon-button" type="button" aria-pressed="true" aria-label="Couper le son" title="Son">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4Z"/>
+            <g class="sound-on"><path d="M16 9.2a4 4 0 0 1 0 5.6"/><path d="M18.6 6.6a7.6 7.6 0 0 1 0 10.8"/></g>
+            <g class="sound-off"><path d="M16.4 10.2 21 14.8"/><path d="M21 10.2l-4.6 4.6"/></g>
+          </svg>
         </button>
         <button id="theme-button" class="icon-button" type="button" aria-label="Changer de palette" title="Palette suivante (T)">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -50,15 +56,18 @@
       </div>
     </header>
 
-    <div id="difficulty" class="difficulty" role="group" aria-label="Difficulté">
-      <button type="button" data-difficulty="facile" aria-pressed="false">Facile</button>
-      <button type="button" data-difficulty="normal" aria-pressed="true">Normal</button>
-      <button type="button" data-difficulty="difficile" aria-pressed="false">Difficile</button>
-    </div>
-
-    <div class="utility-row">
-      <button id="daily-button" class="utility-button" type="button" aria-pressed="false"><span aria-hidden="true">◇</span> Défi du jour</button>
-      <button id="stats-button" class="utility-button" type="button"><span aria-hidden="true">▥</span> Statistiques</button>
+    <div class="setup-row">
+      <div id="difficulty" class="difficulty" role="group" aria-label="Difficulté">
+        <button type="button" data-difficulty="facile" aria-pressed="false">Facile</button>
+        <button type="button" data-difficulty="normal" aria-pressed="true">Normal</button>
+        <button type="button" data-difficulty="difficile" aria-pressed="false">Difficile</button>
+      </div>
+      <button id="daily-button" class="icon-button" type="button" aria-pressed="false" aria-label="Défi du jour" title="Défi du jour">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 20.8 12 12 20.8 3.2 12Z"/></svg>
+      </button>
+      <button id="stats-button" class="icon-button" type="button" aria-label="Statistiques" title="Statistiques">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11"/><path d="M12 20V4"/><path d="M19 20v-6"/></svg>
+      </button>
     </div>
     <p id="daily-badge" class="daily-badge" hidden></p>
 
@@ -67,6 +76,7 @@
       <svg class="laser-layer" viewBox="0 0 6 6" preserveAspectRatio="none" aria-hidden="true">
         <polyline id="beam-glow" class="beam-glow" points=""></polyline>
         <polyline id="beam" class="beam" points=""></polyline>
+        <polyline id="beam-core" class="beam-core" points=""></polyline>
         <circle id="emitter" class="emitter" cx="0" cy="0" r="0.09"></circle>
       </svg>
     </section>
@@ -74,15 +84,12 @@
     <section class="hud" aria-label="Score de la partie">
       <div class="counter"><span class="counter-label">Rotations</span><strong id="moves">0</strong></div>
       <div class="counter counter--par"><span class="counter-label">PAR</span><strong id="par">0</strong></div>
+      <button id="reset-button" class="icon-button" type="button" aria-label="Recommencer ce puzzle" title="Recommencer (R)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8 8 0 1 1 1.9 8.2"/><path d="M4 4v5h5"/></svg>
+      </button>
     </section>
 
     <button id="new-button" class="primary-button" type="button">Nouveau puzzle</button>
-
-    <div class="seed-row">
-      <button id="share-button" class="utility-button" type="button"><span aria-hidden="true">⧉</span> <span class="share-text">Partager</span></button>
-      <code id="seed-label" class="seed-label"></code>
-    </div>
-    <p class="micro-help">Les filtres ne laissent passer que leur couleur. Un cadenas fige le miroir, sur le bon chemin comme ailleurs. <span class="desktop-help">N : nouveau · R : recommencer · T : palette</span></p>
   </main>
 
   <dialog id="win-dialog" class="win-dialog">
@@ -106,19 +113,26 @@
 
     <h3>Palette</h3>
     <div id="palette-choice" class="palette-choice" role="group" aria-label="Palette de couleurs">
-      <button type="button" role="radio" aria-checked="true" data-theme-choice="sable"><span class="palette-swatch swatch-sable" aria-hidden="true"></span><span>Sable</span></button>
-      <button type="button" role="radio" aria-checked="false" data-theme-choice="ardoise"><span class="palette-swatch swatch-ardoise" aria-hidden="true"></span><span>Ardoise</span></button>
-      <button type="button" role="radio" aria-checked="false" data-theme-choice="sauge"><span class="palette-swatch swatch-sauge" aria-hidden="true"></span><span>Sauge</span></button>
-      <button type="button" role="radio" aria-checked="false" data-theme-choice="rose"><span class="palette-swatch swatch-rose" aria-hidden="true"></span><span>Rose</span></button>
+      <button type="button" role="radio" aria-checked="true" data-theme-choice="chambre-noire"><span class="palette-swatch swatch-chambre-noire" aria-hidden="true"></span><span>Chambre noire</span></button>
       <button type="button" role="radio" aria-checked="false" data-theme-choice="nuit"><span class="palette-swatch swatch-nuit" aria-hidden="true"></span><span>Nuit</span></button>
       <button type="button" role="radio" aria-checked="false" data-theme-choice="crepuscule"><span class="palette-swatch swatch-crepuscule" aria-hidden="true"></span><span>Crépuscule</span></button>
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="sable"><span class="palette-swatch swatch-sable" aria-hidden="true"></span><span>Sable</span></button>
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="ardoise"><span class="palette-swatch swatch-ardoise" aria-hidden="true"></span><span>Ardoise</span></button>
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="sauge"><span class="palette-swatch swatch-sauge" aria-hidden="true"></span><span>Sauge</span></button>
     </div>
 
     <h3>Sensations</h3>
     <label class="option"><input type="checkbox" id="option-sounds"><span><strong>Sons discrets</strong><small>Un clic de verre à la rotation, un accord quand le cristal s'allume.</small></span></label>
     <label class="option"><input type="checkbox" id="option-vibration"><span><strong>Vibration</strong><small>Une secousse brève confirme la rotation sur mobile.</small></span></label>
 
-    <p class="version" id="version">Laser &amp; Miroirs 1.4.2</p>
+    <h3>Cette partie</h3>
+    <div class="seed-row">
+      <button id="share-button" class="secondary-button" type="button"><span aria-hidden="true">⧉</span> <span class="share-text">Partager</span></button>
+      <code id="seed-label" class="seed-label"></code>
+    </div>
+    <p class="micro-help">Les filtres ne laissent passer que leur couleur. Un cadenas fige le miroir, sur le bon chemin comme ailleurs. <span class="desktop-help">Au clavier : N nouveau · R recommencer · T palette · Échap ferme.</span></p>
+
+    <p class="version" id="version">Laser &amp; Miroirs 1.5.0</p>
     <button id="options-done" class="primary-button" type="button">Fermer</button>
   </dialog>
 

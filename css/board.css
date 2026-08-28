@@ -1,6 +1,12 @@
 /* Laser & Miroirs — géométrie et habillage du plateau.
    Toutes les couleurs viennent des variables de palettes.css : ce fichier ne
-   fixe aucune teinte en dur. */
+   fixe aucune teinte en dur.
+
+   Une seule intention, le banc d'optique : un plateau sombre et mat, des
+   montures qui ne brillent pas, et un rayon qui est la seule chose lumineuse
+   de l'écran. Jusqu'à la v1.4 ce fichier empilait deux passes de direction
+   artistique — une structure, puis un adoucissement qui la réécrivait presque
+   entièrement — ce qui laissait le jeu sans parti pris lisible. */
 
 * {
   box-sizing: border-box;
@@ -18,6 +24,7 @@ body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
+  padding: max(10px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom));
   display: grid;
   place-items: safe center;
   background: var(--bg);
@@ -32,48 +39,66 @@ button {
   font: inherit;
 }
 
+/* ------------------------------------------------------------- ossature */
+/* Cinq bandes seulement autour du plateau : en-tête, difficulté, plateau,
+   compteurs, action. Le reste — graine, aide, partage — vit dans les
+   dialogues. À huit bandes, le bouton « Nouveau puzzle » tombait sous la
+   ligne de flottaison sur tous les iPhone. */
+
 .game-shell {
+  width: min(100%, 30rem);
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .eyebrow {
-  margin: 0 0 2px;
+  margin: 0 0 1px;
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 750;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
 h1 {
   margin: 0;
-  line-height: 1;
+  font-size: clamp(1.15rem, 4.8vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .topbar-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .icon-button {
   display: grid;
   place-items: center;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
   color: var(--text);
   cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 80ms ease;
 }
 
 .icon-button svg {
-  width: 21px;
-  height: 21px;
+  width: 20px;
+  height: 20px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -81,8 +106,37 @@ h1 {
   stroke-linejoin: round;
 }
 
+.icon-button:hover {
+  border-color: var(--border-vivid);
+  background: color-mix(in srgb, var(--panel) 82%, var(--accent-soft));
+}
+
 .icon-button:active {
   transform: translateY(1px);
+}
+
+/* L'icône du son dit son état : les ondes quand il est actif, la croix
+   quand il est coupé. */
+#sound-button .sound-off {
+  display: none;
+}
+
+#sound-button[aria-pressed="false"] .sound-on {
+  display: none;
+}
+
+#sound-button[aria-pressed="false"] .sound-off {
+  display: inline;
+}
+
+#sound-button[aria-pressed="false"] {
+  color: var(--muted);
+}
+
+.icon-button.is-active {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .icon-button:focus-visible,
@@ -90,37 +144,77 @@ h1 {
 .secondary-button:focus-visible,
 .difficulty button:focus-visible,
 .mirror:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 46%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
 }
 
+/* Difficulté et raccourcis d'entrée partagent une bande : trois segments,
+   puis le défi du jour et les statistiques. Les segments tiennent leurs 44 px
+   — c'est là que la convention prévient qu'on est tenté de tricher pour gagner
+   de la hauteur, et c'est là que ça compte le plus. */
+
+.setup-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/* Les boutons de la bande s'alignent sur la hauteur du sélecteur plutôt que
+   de flotter en haut d'une rangée plus grande qu'eux. */
+.setup-row .icon-button {
+  height: auto;
+  min-height: 44px;
+}
+
 .difficulty {
+  flex: 1 1 auto;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--border);
+  gap: 4px;
+  padding: 4px;
   border-radius: 12px;
+  background: var(--panel-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent);
 }
 
 .difficulty button {
   min-height: 44px;
   border: 0;
-  padding: 8px 6px;
+  border-radius: 9px;
+  padding: 6px 4px;
   background: transparent;
-  font-size: 0.84rem;
+  color: var(--muted);
+  font-size: 0.78rem;
   font-weight: 720;
   cursor: pointer;
+  transition: color 120ms ease, background 120ms ease, box-shadow 120ms ease;
 }
 
-.difficulty button:hover {
+.difficulty button.is-active {
+  background: var(--panel);
   color: var(--text);
+  box-shadow: 0 1px 3px color-mix(in srgb, black 22%, transparent);
 }
+
+/* ---------------------------------------------------------------- plateau */
+/* Le banc : une surface mate, une grille gravée plutôt que des cases
+   dessinées. Rien n'y attire l'œil tant que le rayon ne passe pas. */
 
 .board {
   --size: 6;
+  --active-beam: var(--beam-red);
+  --active-beam-hot: var(--beam-red-hot);
+  --active-beam-glow: var(--beam-red-glow);
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border: 1px solid var(--border-vivid);
+  border: 1px solid var(--board-rim);
+  border-radius: 16px;
+  background: var(--panel-soft);
+  box-shadow:
+    0 0 0 4px var(--board-rim),
+    var(--shadow);
   overflow: hidden;
   isolation: isolate;
 }
@@ -139,9 +233,19 @@ h1 {
   min-width: 0;
   min-height: 0;
   border: 0;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-right: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+  background: var(--cell);
 }
+
+.cell:nth-child(even) {
+  background: var(--cell-alt);
+}
+
+/* ---------------------------------------------------------------- miroirs */
+/* Une monture sombre, une face argentée. La face prend la couleur du rayon
+   quand celui-ci la frappe : c'est ce qui dit « ce miroir sert » sans écrire
+   un mot, et ça remplace l'ancienne pastille beige barrée d'un trait gris. */
 
 .mirror {
   z-index: 4;
@@ -156,19 +260,51 @@ h1 {
 .mirror::before {
   content: "";
   position: absolute;
+  width: 60%;
+  height: 60%;
+  border: 1px solid var(--mirror-mount-edge);
   border-radius: 50%;
+  background: var(--mirror-mount);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+  transition: transform 110ms ease, box-shadow 140ms ease;
+}
+
+.mirror:hover::before {
+  border-color: color-mix(in srgb, var(--mirror-mount-edge) 70%, var(--mirror-face));
 }
 
 .mirror:active::before {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
 .mirror-bar {
   position: relative;
   z-index: 1;
+  width: 66%;
+  height: 11%;
+  min-height: 5px;
   border-radius: 999px;
-  background: linear-gradient(to bottom, var(--metal-light), var(--metal) 42%, var(--metal) 70%, var(--metal-light));
-  transition: transform 140ms ease;
+  background: linear-gradient(
+    to bottom,
+    var(--mirror-face-edge),
+    var(--mirror-face) 38%,
+    var(--mirror-face) 58%,
+    color-mix(in srgb, var(--mirror-face-edge) 80%, black)
+  );
+  box-shadow: 0 1px 2px color-mix(in srgb, black 35%, transparent);
+  transition: transform 140ms ease, box-shadow 160ms ease;
+}
+
+/* Le fil spéculaire : la ligne de lumière qui court sur la tranche polie. */
+.mirror-bar::after {
+  content: "";
+  position: absolute;
+  inset: 12% 8% auto;
+  height: 26%;
+  border-radius: 999px;
+  background: var(--mirror-spec);
+  opacity: 0.5;
+  transition: background 160ms ease, opacity 160ms ease;
 }
 
 .mirror[data-orientation="slash"] .mirror-bar {
@@ -179,6 +315,57 @@ h1 {
   transform: rotate(45deg);
 }
 
+/* Miroir éclairé : la face renvoie la couleur du faisceau. */
+.mirror.is-lit .mirror-bar {
+  box-shadow:
+    0 1px 2px color-mix(in srgb, black 35%, transparent),
+    0 0 10px var(--active-beam-glow);
+}
+
+.mirror.is-lit .mirror-bar::after {
+  background: var(--active-beam-hot);
+  opacity: 0.95;
+}
+
+.mirror--locked {
+  cursor: default;
+}
+
+.mirror--locked::before {
+  opacity: 0.88;
+}
+
+.mirror--locked .mirror-bar {
+  opacity: 0.82;
+}
+
+.mirror-lock {
+  position: absolute;
+  z-index: 5;
+  right: 15%;
+  bottom: 14%;
+  width: 15%;
+  min-width: 9px;
+  aspect-ratio: 0.9;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--metal) 76%, var(--panel));
+  box-shadow: 0 1px 2px color-mix(in srgb, black 40%, transparent);
+}
+
+.mirror-lock::before {
+  content: "";
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 72%;
+  height: 70%;
+  border: 1.5px solid color-mix(in srgb, var(--metal) 80%, var(--metal-light));
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+}
+
+/* ---------------------------------------------------------------- cristal */
+
 .target-cell {
   z-index: 4;
   display: grid;
@@ -186,17 +373,61 @@ h1 {
 }
 
 .crystal {
+  position: relative;
+  width: 40%;
   aspect-ratio: 1;
   transform: rotate(45deg);
-  border: 2px solid var(--crystal-light);
-  border-radius: 18% 42% 18% 42%;
-  box-shadow: 0 0 12px var(--crystal-glow), inset 0 0 7px rgba(255, 255, 255, 0.55);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  border: 1px solid var(--crystal-light);
+  border-radius: 16% 40% 16% 40%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--crystal-light) 88%, white),
+    var(--crystal) 46%,
+    color-mix(in srgb, var(--crystal) 62%, black)
+  );
+  box-shadow:
+    0 0 10px var(--crystal-glow),
+    inset 0 1px 5px color-mix(in srgb, white 45%, transparent);
+  transition: transform 240ms ease, box-shadow 240ms ease;
 }
 
-.board.is-hit .crystal {
-  box-shadow: 0 0 20px 5px var(--crystal-glow), inset 0 0 9px rgba(255, 255, 255, 0.7);
+/* Les facettes : deux traits clairs qui cassent la pierre en quartiers. */
+.crystal::before {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: inherit;
+  border-top: 1px solid color-mix(in srgb, white 55%, transparent);
+  border-left: 1px solid color-mix(in srgb, white 30%, transparent);
 }
+
+/* Le cristal se charge : c'est le sommet de la partie, il mérite mieux qu'un
+   agrandissement de 12 %. */
+.board.is-hit .crystal {
+  transform: rotate(45deg) scale(1.2);
+  box-shadow:
+    0 0 26px 8px var(--crystal-glow),
+    0 0 60px 18px color-mix(in srgb, var(--crystal-glow) 60%, transparent),
+    inset 0 1px 7px color-mix(in srgb, white 70%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .board.is-hit .crystal {
+    animation: crystal-charge 1.1s ease-out;
+  }
+}
+
+@keyframes crystal-charge {
+  0% { transform: rotate(45deg) scale(1); }
+  38% { transform: rotate(45deg) scale(1.34); }
+  100% { transform: rotate(45deg) scale(1.2); }
+}
+
+/* ------------------------------------------------------------------ rayon */
+/* Trois strates, comme un vrai faisceau : un bloom large qui déborde, le
+   corps coloré, un cœur presque blanc. Le bloom est permanent — la mesure
+   faite sur Diamants dit qu'un halo statique ne coûte rien tant que rien ne
+   le repeint ; ce sont les animations éphémères qui coûtent. */
 
 .laser-layer {
   position: absolute;
@@ -209,7 +440,8 @@ h1 {
 }
 
 .beam,
-.beam-glow {
+.beam-glow,
+.beam-core {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -217,59 +449,101 @@ h1 {
 }
 
 .beam-glow {
-  stroke: var(--laser-glow);
+  stroke: var(--active-beam);
+  stroke-width: 15px;
+  opacity: var(--bloom);
+  filter: blur(5px);
+  mix-blend-mode: var(--beam-blend);
 }
 
 .beam {
-  stroke: var(--laser);
+  stroke: var(--active-beam);
+  stroke-width: 3.8px;
+}
+
+/* Le cœur n'est pas fondu : sur une palette claire le `multiply` du bloom
+   l'effacerait, alors qu'il y sert justement de brillance. */
+.beam-core {
+  stroke: var(--beam-core);
+  stroke-width: 1px;
+  opacity: var(--core-opacity);
 }
 
 .emitter {
-  fill: var(--laser-hot);
-  stroke: var(--laser);
-  stroke-width: 0.06;
+  r: 0.085;
+  fill: var(--active-beam-hot);
+  stroke: var(--active-beam);
+  stroke-width: 0.05;
+  filter: drop-shadow(0 0 4px var(--active-beam));
+}
+
+/* Le rayon bloqué par un filtre s'éteint un peu ; la boucle se met à courir. */
+.board.is-blocked .beam,
+.board.is-blocked .beam-core {
+  opacity: 0.62;
 }
 
 .board.is-loop .beam {
-  stroke-dasharray: 0.13 0.08;
+  stroke-dasharray: 0.16 0.1;
 }
+
+/* --------------------------------------------------------- compteurs et actions */
 
 .hud {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 6px;
 }
 
 .counter {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-  border: 1px solid var(--border);
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 12px;
   border-radius: 12px;
+  background: var(--panel-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent);
 }
 
 .counter-label {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.66rem;
+  font-weight: 720;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .counter strong {
-  font-size: 1.35rem;
+  font-size: 1.2rem;
+  font-weight: 780;
   font-variant-numeric: tabular-nums;
+}
+
+.counter--par strong {
+  color: var(--accent);
 }
 
 .primary-button,
 .secondary-button {
   min-height: 44px;
   padding: 10px 16px;
+  border-radius: 12px;
   font-weight: 760;
   cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
 }
 
 .primary-button {
-  border: 1px solid var(--accent);
+  border: 1px solid transparent;
+  background: var(--accent);
   color: var(--accent-text);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.primary-button:hover {
+  background: color-mix(in srgb, var(--accent) 88%, white);
 }
 
 .primary-button:active {
@@ -277,59 +551,24 @@ h1 {
 }
 
 .secondary-button {
-  border: 1px solid var(--border-vivid);
+  border: 1px solid transparent;
+  background: var(--panel-soft);
   color: var(--text);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent);
 }
 
-.micro-help {
-  margin: -3px 0 0;
+.secondary-button:hover {
+  background: color-mix(in srgb, var(--panel-soft) 78%, var(--accent-soft));
+}
+
+/* ---------------------------------------------------------------- divers */
+
+.daily-badge {
+  margin: -2px 0 0;
   text-align: center;
-  color: var(--muted);
-  font-size: 0.73rem;
-  line-height: 1.4;
-}
-
-.win-dialog {
-  width: min(calc(100% - 28px), 25rem);
-  border: 1px solid var(--border);
-  padding: 22px;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.32);
-  text-align: center;
-}
-
-.win-dialog::backdrop {
-  background: rgba(7, 15, 24, 0.52);
-}
-
-.win-mark {
-  margin: 0 auto 8px;
-  color: var(--crystal);
-  font-size: 2.4rem;
-}
-
-.win-dialog h2 {
-  margin: 0;
-  font-size: 1.45rem;
-}
-
-.win-result {
-  margin: 10px 0 4px;
-  font-size: 1.05rem;
-  font-weight: 760;
-}
-
-.win-detail {
-  margin: 0 0 18px;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.dialog-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 720;
 }
 
 .sr-only {
@@ -344,35 +583,34 @@ h1 {
   border: 0;
 }
 
-@media (max-width: 380px), (max-height: 700px) {
-  body {
-    padding-top: max(9px, env(safe-area-inset-top));
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-  }
+/* Petits écrans : l'en-tête se resserre, le plateau ne bouge pas — il est
+   déjà borné par la largeur, pas par la hauteur. */
 
+@media (max-width: 380px), (max-height: 700px) {
   .game-shell {
-    gap: 8px;
+    gap: 7px;
   }
 
   .eyebrow {
     display: none;
   }
 
-  h1 {
-    font-size: 1.65rem;
-  }
-
   .icon-button {
     width: 44px;
     height: 44px;
+    border-radius: 11px;
+  }
+
+  .topbar-actions {
+    gap: 4px;
   }
 
   .difficulty button {
-    padding-block: 6px;
+    font-size: 0.74rem;
   }
 
   .counter {
-    padding-block: 7px;
+    padding: 7px 10px;
   }
 }
 
@@ -389,337 +627,5 @@ h1 {
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
     animation-duration: 0.001ms !important;
-  }
-}
-
-/* ------------------------------------------------------------------ Sable */
-
-/* --------------------------------------------------------------- Ardoise */
-
-/* ------------------------------------------------------------------ Sauge */
-
-/* ------------------------------------------------------------------- Rose */
-
-/* ------------------------------------------------------------------- Nuit */
-
-/* ------------------------------------------------------------- Crépuscule */
-
-/* Même respiration et même typographie que les autres petits jeux. */
-
-body {
-  padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
-}
-
-.game-shell {
-  width: min(100%, 30rem);
-  gap: 11px;
-}
-
-.eyebrow {
-  display: none;
-}
-
-h1 {
-  font-size: clamp(1.9rem, 8vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
-.topbar {
-  gap: 10px;
-}
-
-.topbar-actions {
-  position: relative;
-}
-
-.icon-button {
-  width: 44px;
-  height: 44px;
-  border-color: var(--border);
-  border-radius: 12px;
-  background: var(--panel);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 52%, transparent);
-  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
-}
-
-.icon-button:hover {
-  border-color: var(--border-vivid);
-  background: color-mix(in srgb, var(--panel) 80%, var(--panel-soft));
-}
-
-/* -------------------------------------------------------- choix de palette */
-
-.palette-choice {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
-}
-
-.palette-choice button {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-  padding: 8px 9px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text);
-  font-size: 0.82rem;
-  font-weight: 680;
-  text-align: left;
-  cursor: pointer;
-}
-
-.palette-choice button:hover {
-  background: var(--panel-soft);
-}
-
-.palette-choice button.is-active {
-  background: var(--accent-soft);
-  color: var(--text);
-}
-
-.palette-choice button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 44%, transparent);
-  outline-offset: 1px;
-}
-
-.palette-swatch {
-  flex: 0 0 auto;
-  width: 25px;
-  height: 25px;
-  border: 1px solid color-mix(in srgb, var(--text) 13%, transparent);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, white 30%, transparent);
-}
-
-.swatch-sable {
-  background: conic-gradient(#f7f2e8 0 34%, #c1712c 34% 67%, #5796a7 67%);
-}
-
-.swatch-ardoise {
-  background: conic-gradient(#edf1f4 0 34%, #607f98 34% 67%, #579caf 67%);
-}
-
-.swatch-sauge {
-  background: conic-gradient(#f1f2e9 0 34%, #71835b 34% 67%, #669ba0 67%);
-}
-
-.swatch-rose {
-  background: conic-gradient(#f8eff1 0 34%, #a85b70 34% 67%, #6c9ba9 67%);
-}
-
-.swatch-nuit {
-  background: conic-gradient(#16120e 0 34%, #e0a44e 34% 67%, #78aab5 67%);
-}
-
-.swatch-crepuscule {
-  background: conic-gradient(#19151b 0 34%, #b8899a 34% 67%, #74a7ae 67%);
-}
-
-/* Le sélecteur devient une commande segmentée discrète plutôt qu'un cadre. */
-
-.difficulty {
-  gap: 4px;
-  padding: 4px;
-  border-color: transparent;
-  background: var(--panel-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 65%, transparent);
-}
-
-.difficulty button {
-  border-radius: 9px;
-  color: var(--muted);
-  transition: color 120ms ease, background 120ms ease, box-shadow 120ms ease;
-}
-
-.difficulty button.is-active {
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 10%, transparent);
-}
-
-/* Le plateau reçoit un cadre rappelant le plateau de 2048.
-   La grille reste au même endroit : aucun impact sur les coordonnées du laser. */
-
-.board {
-  border-color: color-mix(in srgb, var(--board-rim) 70%, var(--border));
-  border-radius: 16px;
-  background: var(--panel-soft);
-  box-shadow:
-    0 0 0 5px var(--board-rim),
-    var(--shadow);
-}
-
-.cell {
-  border-right-color: color-mix(in srgb, var(--border) 58%, transparent);
-  border-bottom-color: color-mix(in srgb, var(--border) 58%, transparent);
-  background: var(--cell);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
-}
-
-.cell:nth-child(even) {
-  background: var(--cell-alt);
-}
-
-/* Le miroir devient un petit objet mat posé sur le plateau. */
-
-.mirror::before {
-  width: 56%;
-  height: 56%;
-  border: 1px solid color-mix(in srgb, var(--mirror-disc-edge) 66%, transparent);
-  background: var(--mirror-disc);
-  box-shadow:
-    0 2px 5px color-mix(in srgb, var(--text) 9%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 38%, transparent);
-  transition: transform 110ms ease, background 120ms ease, box-shadow 120ms ease;
-}
-
-.mirror:hover::before {
-  border-color: color-mix(in srgb, var(--mirror-disc-edge) 85%, transparent);
-  background: color-mix(in srgb, var(--mirror-disc) 88%, var(--panel));
-  box-shadow:
-    0 3px 7px color-mix(in srgb, var(--text) 12%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 42%, transparent);
-}
-
-.mirror-bar {
-  width: 62%;
-  height: 7%;
-  min-height: 4px;
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--metal-light) 86%, var(--panel)),
-    var(--metal) 46%,
-    color-mix(in srgb, var(--metal) 86%, var(--text)) 66%,
-    color-mix(in srgb, var(--metal-light) 82%, var(--panel))
-  );
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 16%, transparent);
-}
-
-/* Cristal moins néon, davantage pierre polie. */
-
-.crystal {
-  width: 36%;
-  border: 1px solid color-mix(in srgb, var(--crystal-light) 78%, var(--crystal));
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--crystal-light) 88%, white),
-    var(--crystal) 48%,
-    color-mix(in srgb, var(--crystal) 76%, #315d68)
-  );
-  box-shadow:
-    0 0 8px var(--crystal-glow),
-    inset 0 1px 4px color-mix(in srgb, white 52%, transparent);
-}
-
-.board.is-hit .crystal {
-  transform: rotate(45deg) scale(1.12);
-  box-shadow:
-    0 0 14px 3px var(--crystal-glow),
-    inset 0 1px 5px color-mix(in srgb, white 58%, transparent);
-}
-
-/* Le rayon reste immédiatement lisible mais cesse d'être un tube néon. */
-
-.beam-glow {
-  stroke-width: 7px;
-  filter: blur(1.5px);
-  opacity: 0.8;
-}
-
-.beam {
-  stroke-width: 2.6px;
-  filter: drop-shadow(0 0 1px var(--laser-hot));
-}
-
-.emitter {
-  r: 0.075;
-  filter: drop-shadow(0 0 2px var(--laser));
-}
-
-/* HUD et boutons : surfaces douces, peu de traits. */
-
-.hud {
-  gap: 8px;
-}
-
-.counter {
-  padding: 10px 13px;
-  border-color: transparent;
-  background: var(--panel-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 62%, transparent);
-}
-
-.counter-label {
-  font-weight: 720;
-  letter-spacing: 0.07em;
-}
-
-.counter strong {
-  font-weight: 780;
-  color: var(--text);
-}
-
-.counter--par strong {
-  color: var(--accent);
-}
-
-.primary-button,
-.secondary-button {
-  border-radius: 12px;
-  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease, box-shadow 120ms ease;
-}
-
-.primary-button {
-  border-color: transparent;
-  background: var(--accent);
-  box-shadow: 0 2px 5px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
-.primary-button:hover {
-  filter: none;
-  background: color-mix(in srgb, var(--accent) 90%, var(--text));
-}
-
-.secondary-button {
-  border-color: transparent;
-  background: var(--panel-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 66%, transparent);
-}
-
-.secondary-button:hover {
-  border-color: transparent;
-  background: color-mix(in srgb, var(--panel-soft) 80%, var(--accent-soft));
-}
-
-.micro-help {
-  color: color-mix(in srgb, var(--muted) 88%, transparent);
-}
-
-.win-dialog {
-  border-color: transparent;
-  border-radius: 16px;
-  box-shadow: 0 22px 60px color-mix(in srgb, var(--text) 22%, transparent);
-}
-
-.win-dialog::backdrop {
-  background: color-mix(in srgb, var(--text) 28%, transparent);
-  backdrop-filter: blur(2px);
-}
-
-.win-mark {
-  text-shadow: 0 0 10px var(--crystal-glow);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .icon-button,
-.difficulty button,
-.mirror::before,
-.primary-button,
-.secondary-button {
-    transition-duration: 1ms;
   }
 }

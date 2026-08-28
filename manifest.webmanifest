@@ -7,9 +7,13 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f7f2e8",
-  "theme_color": "#f7f2e8",
-  "categories": ["games", "puzzle", "casual"],
+  "background_color": "#0a0c10",
+  "theme_color": "#0a0c10",
+  "categories": [
+    "games",
+    "puzzle",
+    "casual"
+  ],
   "icons": [
     {
       "src": "assets/icon-180.png",

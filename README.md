@@ -2,6 +2,33 @@
 
 Petit puzzle optique statique pour navigateur. Le laser est visible en permanence : chaque clic fait pivoter un miroir entre `/` et `\`. Le but est d'atteindre le cristal en aussi peu de rotations que possible.
 
+## Version 1.5.0
+
+Direction artistique : **le banc d'optique**. Le jeu se jouait sur du papier,
+alors qu'un rayon est une émission — il n'existe que contre du noir.
+
+- **Chambre noire** devient la palette par défaut : presque noir, grille
+  gravée, et la seule couleur saturée de l'écran est le rayon ;
+- **la couleur du rayon appartient désormais à la palette.** Elle vivait dans
+  un `:root` unique réglé pour la crème : sur les ambiances sombres, le bleu
+  rendait un denim terne au lieu d'un faisceau ;
+- le rayon a **trois strates** — bloom large, corps coloré, cœur presque
+  blanc — au lieu d'un trait de 2,6 px dont le halo était éteint à 20 % ;
+- les **miroirs** sont des faces argentées sur monture sombre, et celle que le
+  faisceau frappe en renvoie la couleur : on voit lesquels servent ;
+- les **filtres** sont des vitres teintées que le rayon traverse, au lieu
+  d'une lettre dans une boîte ; la lettre reste au centre, en redondance ;
+- le **cristal** se charge quand le rayon l'atteint et éclaire ses voisines ;
+- palettes : trois sombres (Chambre noire, Nuit, Crépuscule) et trois claires
+  (Sable, Ardoise, Sauge). **Rose est retirée** — sept sortait de la fourchette
+  de la convention ; une préférence enregistrée sur Rose migre vers Crépuscule ;
+- sur les palettes claires le rayon assume l'encre : trait franc, cœur pâle en
+  guise de brillance, ombre colorée portée plutôt qu'un halo qui n'arrive pas ;
+- **bouton son dans l'en-tête**, comme le veut la convention — il manquait ;
+- **la page tient sur un iPhone SE** : huit bandes autour du plateau, c'était
+  « Nouveau puzzle » sous la ligne de flottaison sur tous les téléphones. Il en
+  reste cinq ; graine, partage et aide vivent dans les Options.
+
 ## Version 1.4.2
 
 - le miroir verrouillé s'entend enfin sur un téléphone : sa note disait non par
@@ -93,8 +120,8 @@ Un lien du jour rouvert un autre jour redonne la même grille, mais hors mode qu
 - `js/share.js` : lien et résumé de partage, testable sans navigateur ;
 - `js/sound.js` : les quatre timbres de synthèse WebAudio, tous au-dessus du plancher des 300 Hz que ne franchit pas un haut-parleur de téléphone ;
 - `js/app.js` : interface, défi quotidien, partage, statistiques et état de partie ;
-- `css/palettes.css` : les six palettes, et rien d'autre ;
-- `css/board.css` : géométrie et habillage du plateau, sans aucune teinte en dur ;
+- `css/palettes.css` : les six palettes — trois sombres, trois claires — et rien d'autre ; chacune porte aussi les couleurs de rayon, qui ne sont pas les mêmes sur un banc d'optique et sur du papier ;
+- `css/board.css` : géométrie et habillage du plateau, sans aucune teinte en dur — une seule intention, le banc d'optique ;
 - `css/features.css` : éléments optiques et écrans annexes (filtres, cadenas, défi du jour, statistiques, partage) ;
 - `tests/` : tests Node du moteur, du générateur, du partage, du son, et les vérifications structurelles de la page.
 

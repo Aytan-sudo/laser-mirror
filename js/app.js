@@ -6,14 +6,18 @@ import { shareLink, shareMessage } from './share.js';
 import { prepareSound, soundLocked, soundPerfect, soundRotate, soundWin } from './sound.js';
 import { loadValue, removeValue, saveValue } from './storage.js';
 
+// Trois sombres d'abord : un rayon n'existe que contre du noir, et la
+// première de la liste est celle que le CSS sert sans attribut.
 const THEMES = {
+  'chambre-noire': { label: 'Chambre noire', themeColor: '#0a0c10' },
+  nuit: { label: 'Nuit', themeColor: '#16120e' },
+  crepuscule: { label: 'Crépuscule', themeColor: '#19151b' },
   sable: { label: 'Sable', themeColor: '#f7f2e8' },
   ardoise: { label: 'Ardoise', themeColor: '#edf1f4' },
   sauge: { label: 'Sauge', themeColor: '#f1f2e9' },
-  rose: { label: 'Rose', themeColor: '#f8eff1' },
-  nuit: { label: 'Nuit', themeColor: '#16120e' },
-  crepuscule: { label: 'Crépuscule', themeColor: '#19151b' },
 };
+
+const DEFAULT_THEME = 'chambre-noire';
 
 // Le bouton d'en-tête fait tourner cette liste ; les Options y donnent
 // l'accès direct.
@@ -26,6 +30,7 @@ const els = {
   cells: document.querySelector('#cells'),
   beam: document.querySelector('#beam'),
   beamGlow: document.querySelector('#beam-glow'),
+  beamCore: document.querySelector('#beam-core'),
   emitter: document.querySelector('#emitter'),
   moves: document.querySelector('#moves'),
   par: document.querySelector('#par'),
@@ -38,6 +43,7 @@ const els = {
   optionsDialog: document.querySelector('#options-dialog'),
   optionsClose: document.querySelector('#options-close'),
   optionsDone: document.querySelector('#options-done'),
+  sound: document.querySelector('#sound-button'),
   optionSounds: document.querySelector('#option-sounds'),
   optionVibration: document.querySelector('#option-vibration'),
   version: document.querySelector('#version'),
@@ -89,6 +95,18 @@ function play(sound) {
   if (preferences.sounds) sound();
 }
 
+// Le bouton d'en-tête et la case des Options commandent le même réglage : il
+// leur faut un seul chemin, sinon l'un des deux ment.
+function setSounds(on, { sample = false } = {}) {
+  preferences.sounds = on;
+  saveValue('sounds', on);
+  els.optionSounds.checked = on;
+  els.sound.setAttribute('aria-pressed', String(on));
+  els.sound.setAttribute('aria-label', on ? 'Couper le son' : 'Rétablir le son');
+  els.sound.setAttribute('title', on ? 'Son activé' : 'Son coupé');
+  if (on && sample) soundRotate();
+}
+
 function vibrate(pattern) {
   if (preferences.vibration) navigator.vibrate?.(pattern);
 }
@@ -98,7 +116,7 @@ init();
 function init() {
   if (!DIFFICULTIES[state.difficulty]) state.difficulty = 'normal';
   applyStoredTheme();
-  els.optionSounds.checked = preferences.sounds;
+  setSounds(preferences.sounds);
   els.optionVibration.checked = preferences.vibration;
   els.version.textContent = `Laser & Miroirs ${VERSION}`;
   // Avant tout, le filet du son sur téléphone : le contexte audio se prépare au
@@ -169,14 +187,15 @@ function bindEvents() {
   els.optionsClose.addEventListener('click', () => els.optionsDialog.close());
   els.optionsDone.addEventListener('click', () => els.optionsDialog.close());
 
-  for (const [element, key] of [[els.optionSounds, 'sounds'], [els.optionVibration, 'vibration']]) {
-    element.addEventListener('change', () => {
-      preferences[key] = element.checked;
-      saveValue(key, element.checked);
-      // Cocher la case donne aussitôt un échantillon de ce qu'elle promet.
-      if (element.checked) (key === 'sounds' ? soundRotate : () => navigator.vibrate?.(12))();
-    });
-  }
+  // Cocher la case, comme appuyer sur le bouton, donne aussitôt un échantillon
+  // de ce que le réglage promet.
+  els.sound.addEventListener('click', () => setSounds(!preferences.sounds, { sample: true }));
+  els.optionSounds.addEventListener('change', () => setSounds(els.optionSounds.checked, { sample: true }));
+  els.optionVibration.addEventListener('change', () => {
+    preferences.vibration = els.optionVibration.checked;
+    saveValue('vibration', preferences.vibration);
+    if (preferences.vibration) navigator.vibrate?.(12);
+  });
 
   document.addEventListener('keydown', (event) => {
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -377,7 +396,7 @@ function renderPuzzle() {
         cell.dataset.filterColor = filter.color;
         cell.setAttribute('role', 'img');
         cell.setAttribute('aria-label', `Filtre ${COLOR_LABELS[filter.color]}`);
-        cell.innerHTML = `<span class="filter-disc" aria-hidden="true"><span>${COLOR_LABELS[filter.color][0].toUpperCase()}</span></span>`;
+        cell.innerHTML = `<span class="filter-pane" aria-hidden="true"><span>${COLOR_LABELS[filter.color][0].toUpperCase()}</span></span>`;
       } else {
         cell = document.createElement('div');
         cell.className = 'cell';
@@ -408,6 +427,15 @@ function renderState() {
   const points = trace.points.map((point) => `${point.x},${point.y}`).join(' ');
   els.beam.setAttribute('points', points);
   els.beamGlow.setAttribute('points', points);
+  els.beamCore.setAttribute('points', points);
+
+  // Les miroirs que le faisceau frappe renvoient sa couleur : c'est ce qui dit
+  // « celui-ci sert » sans écrire un mot.
+  const lit = new Set(trace.visitedCells.map((cell) => `${cell.row},${cell.col}`));
+  for (const element of els.cells.querySelectorAll('[data-mirror-index]')) {
+    const mirror = state.puzzle.mirrors[Number(element.dataset.mirrorIndex)];
+    element.classList.toggle('is-lit', lit.has(`${mirror.row},${mirror.col}`));
+  }
 
   const first = trace.points[0];
   els.emitter.setAttribute('cx', String(first.x));
@@ -629,12 +657,16 @@ function openStats() {
 }
 
 function applyStoredTheme() {
-  const stored = loadValue('theme', 'sable');
+  const stored = loadValue('theme', DEFAULT_THEME);
+  // Rose est partie en v1.5 : sept palettes sortaient de la fourchette de la
+  // convention. Ceux qui l'avaient choisie atterrissent sur sa parente teintée
+  // plutôt que sur le défaut, qui n'a plus rien à voir.
   const migrated = stored === 'clair' ? 'sable'
     : stored === 'sombre' ? 'nuit'
       : stored === 'system' ? 'sable'
-        : stored;
-  const theme = THEMES[migrated] ? migrated : 'sable';
+        : stored === 'rose' ? 'crepuscule'
+          : stored;
+  const theme = THEMES[migrated] ? migrated : DEFAULT_THEME;
   if (theme !== stored) saveValue('theme', theme);
   setTheme(theme);
 }
@@ -649,7 +681,7 @@ function nextTheme() {
 }
 
 function setTheme(theme) {
-  const selected = THEMES[theme] ? theme : 'sable';
+  const selected = THEMES[theme] ? theme : DEFAULT_THEME;
   document.documentElement.dataset.theme = selected;
 
   const config = THEMES[selected];
