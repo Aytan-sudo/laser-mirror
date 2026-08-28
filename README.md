@@ -2,6 +2,17 @@
 
 Petit puzzle optique statique pour navigateur. Le laser est visible en permanence : chaque clic fait pivoter un miroir entre `/` et `\`. Le but est d'atteindre le cristal en aussi peu de rotations que possible.
 
+## Version 1.4.2
+
+- le miroir verrouillé s'entend enfin sur un téléphone : sa note disait non par
+  la profondeur — 150 Hz, c'est-à-dire rien du tout sur un haut-parleur de
+  téléphone — elle le dit désormais par sa chute, de 440 vers 320 Hz ;
+- le contexte audio se prépare au premier geste du joueur, seul moment où iOS
+  accepte de le démarrer, et se réveille au retour de l'arrière-plan ;
+- `tests/sound.test.js` : un contexte audio factice fait tourner le vrai module
+  et relève les hauteurs réellement émises, glissandos compris ;
+- `npm run serve` prend le port 8771, à lui seul.
+
 ## Version 1.4.1
 
 - les cibles tactiles de l'interface passent à 44 px (boutons d'en-tête,
@@ -80,12 +91,12 @@ Un lien du jour rouvert un autre jour redonne la même grille, mais hors mode qu
 - `js/storage.js` : stockage local avec fallback mémoire ;
 - `js/config.js` : la version du jeu et l'adresse publique, rien d'autre ;
 - `js/share.js` : lien et résumé de partage, testable sans navigateur ;
-- `js/sound.js` : les quatre timbres de synthèse WebAudio ;
+- `js/sound.js` : les quatre timbres de synthèse WebAudio, tous au-dessus du plancher des 300 Hz que ne franchit pas un haut-parleur de téléphone ;
 - `js/app.js` : interface, défi quotidien, partage, statistiques et état de partie ;
 - `css/palettes.css` : les six palettes, et rien d'autre ;
 - `css/board.css` : géométrie et habillage du plateau, sans aucune teinte en dur ;
 - `css/features.css` : éléments optiques et écrans annexes (filtres, cadenas, défi du jour, statistiques, partage) ;
-- `tests/` : tests Node du moteur, du générateur, du partage, et les vérifications structurelles de la page.
+- `tests/` : tests Node du moteur, du générateur, du partage, du son, et les vérifications structurelles de la page.
 
 Le code interne reste en anglais, comme au premier jour du jeu : la convention française du dossier ne vaut que pour les jeux nouveaux, et mélanger les deux au sein d'un même moteur coûterait plus que ça ne rapporte.
 
@@ -99,7 +110,7 @@ npm run check
 npm run serve
 ```
 
-`npm run serve` ouvre le dossier sur `http://localhost:8765`. Ce port est partagé par les autres jeux du dossier : si un module semble venir d'ailleurs, vider le cache du navigateur pour `localhost:8765`, ou servir sur un autre port.
+`npm run serve` ouvre le dossier sur `http://localhost:8771`. Le port est propre à ce jeu, et c'est délibéré : les jeux du dossier ont longtemps partagé `8765`, donc une même origine — même `localStorage`, même portée de service worker, mêmes caches — au point qu'un jeu pouvait servir ses propres modules à son voisin.
 
 ## Contrôles
 

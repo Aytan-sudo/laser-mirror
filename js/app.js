@@ -3,7 +3,7 @@ import { orientationAt, traceLaser } from './engine.js';
 import { DIFFICULTIES, generatePuzzle } from './generator.js';
 import { randomSeed } from './rng.js';
 import { shareLink, shareMessage } from './share.js';
-import { soundLocked, soundPerfect, soundRotate, soundWin } from './sound.js';
+import { prepareSound, soundLocked, soundPerfect, soundRotate, soundWin } from './sound.js';
 import { loadValue, removeValue, saveValue } from './storage.js';
 
 const THEMES = {
@@ -101,6 +101,9 @@ function init() {
   els.optionSounds.checked = preferences.sounds;
   els.optionVibration.checked = preferences.vibration;
   els.version.textContent = `Laser & Miroirs ${VERSION}`;
+  // Avant tout, le filet du son sur téléphone : le contexte audio se prépare au
+  // premier geste du joueur, seul moment où iOS accepte de le démarrer.
+  prepareSound(document, () => preferences.sounds);
   bindEvents();
   renderDifficulty();
 
