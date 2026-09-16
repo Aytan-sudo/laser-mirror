@@ -1,4 +1,4 @@
-/* Passeport 1.7.0 — source commune, distribuée par scripts/distribuer.mjs.
+/* Passeport 1.8.0 — source commune, distribuée par scripts/distribuer.mjs.
  * Aucun réseau. Une entrée indépendante par profil / jeu / journée évite
  * qu'une partie dans un autre onglet écrase les tampons de son voisin.
  */
@@ -48,7 +48,11 @@
         // Le cristal atteint, ou vingt miroirs pivotés dans la journée.
         'laser-mirror': { theme: 'logique', questions: 20, stockage: 'lasers', nom: 'Laser & Miroirs' },
         // Une grille démêlée, ou vingt sommets déposés dans la journée.
-        untangle: { theme: 'logique', questions: 20, stockage: 'untangle', nom: 'Untangle' }
+        untangle: { theme: 'logique', questions: 20, stockage: 'untangle', nom: 'Untangle' },
+        // Le trésor trouvé, ou cent cinquante mètres marchés dans la journée —
+        // le compteur de cases du jeu, cumulé sur toutes les parties, morts
+        // comprises. Le plus court chemin d'un petit donjon en fait 68.
+        'maze-for-adventurers': { theme: 'aventure', questions: 150, stockage: 'maze', nom: 'Maze for Adventurers' }
     };
     const ESPACES = Object.values(JEUX).map(j => j.stockage);
     // Les clés que chaque jeu écrit en mode invité, rangées par espace : c'est
@@ -72,7 +76,9 @@
         diamants: ['diamants:reglages', 'diamants:mode', 'diamants:stats', 'diamants:jour', 'diamants:libre'],
         lasers: ['laser-mirror:difficulty', 'laser-mirror:sounds', 'laser-mirror:vibration',
             'laser-mirror:theme', 'laser-mirror:stats', 'laser-mirror:current-game'],
-        untangle: ['untangle.preferences', 'untangle.partie', 'untangle.statistiques']
+        untangle: ['untangle.preferences', 'untangle.partie', 'untangle.statistiques'],
+        // Maze ne retient qu'une chose : le son coupé ou non ('1' ou '0').
+        maze: ['mfa.muted']
     };
     const ESPACE_DE_CLE = new Map(Object.entries(ANCIENNES_CLES)
         .flatMap(([espace, cles]) => cles.map(c => [c, espace])));

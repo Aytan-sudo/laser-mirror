@@ -2,6 +2,12 @@
 
 Petit puzzle optique statique pour navigateur. Le laser est visible en permanence : chaque clic fait pivoter un miroir entre `/` et `\`. Le but est d'atteindre le cristal en aussi peu de rotations que possible.
 
+## Version 1.6.1 — Passeport 1.8.0
+
+Module commun du passeport 1.8.0 : **Maze for Adventurers** rejoint le thème
+Aventure, aux côtés de Snake. Toute la collection est désormais raccordée. Rien
+ne change dans le jeu.
+
 ## Version 1.6.0 — Le passeport commun
 
 Ouvert depuis le hub avec un passeport, le jeu range réglages, statistiques et
