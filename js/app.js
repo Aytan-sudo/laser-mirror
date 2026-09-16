@@ -4,7 +4,7 @@ import { DIFFICULTIES, generatePuzzle } from './generator.js';
 import { randomSeed } from './rng.js';
 import { shareLink, shareMessage } from './share.js';
 import { prepareSound, soundLocked, soundPerfect, soundRotate, soundWin } from './sound.js';
-import { loadValue, removeValue, saveValue } from './storage.js';
+import { loadValue, removeValue, saveValue, compterRotationPasseport } from './storage.js';
 
 // Trois sombres d'abord : un rayon n'existe que contre du noir, et la
 // première de la liste est celle que le CSS sert sans attribut.
@@ -315,10 +315,21 @@ function resetPuzzle() {
   announce('Puzzle recommencé.');
 }
 
+// Le tampon du passeport : le cristal atteint le donne tout de suite ; sinon,
+// c'est la vingtième rotation de la journée, tous puzzles confondus. En mode
+// invité, rien n'est compté ni écrit.
+function noterPasseport({ rotation = false, reussite = false } = {}) {
+  const joueur = globalThis.Passeport;
+  if (!joueur?.profilId) return;
+  const rotations = rotation ? compterRotationPasseport(joueur.jourLocal()) : 0;
+  if (rotations !== null) joueur.noter('laser-mirror', rotations, reussite);
+}
+
 function rotateMirror(index) {
   if (state.puzzle.mirrors[index]?.locked) return;
   state.mask ^= (1 << index);
   state.moves += 1;
+  noterPasseport({ rotation: true });   // un miroir verrouillé ne compte pas : le `return` ci-dessus
   play(soundRotate);
   vibrate(10);
   renderState();
@@ -330,6 +341,7 @@ function rotateMirror(index) {
 
 function finishGame() {
   state.won = true;
+  noterPasseport({ reussite: true });
   state.result = { moves: state.moves, par: state.puzzle.par };
   removeValue('current-game');
   recordCompletion();
@@ -472,9 +484,14 @@ function renderMode() {
 // même puzzle, et partager le lien se réduit à copier l'adresse.
 function puzzleUrl() {
   const url = new URL(location.href);
+  // Le profil du passeport traverse la réécriture : sans lui, un rechargement
+  // rendrait la partie à l'invité. Les liens partagés, eux, partent de
+  // `GAME_URL` (share.js) et ne portent jamais le profil.
+  const profil = url.searchParams.get('profil');
   url.search = state.mode === 'daily'
     ? new URLSearchParams({ jour: state.dailyDate })
     : new URLSearchParams({ seed: state.puzzle.seed, niveau: state.difficulty });
+  if (profil !== null) url.searchParams.set('profil', profil);
   return url.toString();
 }
 

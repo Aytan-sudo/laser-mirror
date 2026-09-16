@@ -12,13 +12,19 @@
   <link rel="stylesheet" href="css/palettes.css">
   <link rel="stylesheet" href="css/board.css">
   <link rel="stylesheet" href="css/features.css">
+  <link rel="stylesheet" href="commun/passeport.css">
+  <script src="commun/passeport.js"></script>
+  <script src="commun/liaison.js" defer></script>
   <script>
     // La palette est posée avant le premier pixel : un module différé
     // ferait charger la page en Chambre noire puis clignoter vers la bonne
     // teinte. Sans préférence enregistrée, aucun attribut n'est posé — c'est
     // le `:root` nu de palettes.css qui sert le défaut, et lui seul.
     try {
-      const stored = JSON.parse(localStorage.getItem('laser-mirror:theme') || '""');
+      // Avec un passeport, la palette est celle du joueur ; en mode invité,
+      // celle de l'appareil, comme avant.
+      const store = globalThis.Passeport?.stockageJeu('lasers') || localStorage;
+      const stored = JSON.parse(store.getItem('laser-mirror:theme') || '""');
       const migrated = { clair: 'sable', sombre: 'nuit', system: 'sable', rose: 'crepuscule' }[stored] || stored;
       if (/^(chambre-noire|nuit|crepuscule|sable|ardoise|sauge)$/.test(migrated)) {
         document.documentElement.dataset.theme = migrated;
@@ -27,6 +33,9 @@
   </script>
 </head>
 <body>
+  <div class="passeport-ruban" data-passeport-ruban data-jeu="laser-mirror"
+       data-consigne="Tampon : le cristal atteint ou 20 rotations"></div>
+
   <main class="game-shell">
     <header class="topbar">
       <div>
@@ -132,7 +141,7 @@
     </div>
     <p class="micro-help">Les filtres ne laissent passer que leur couleur. Un cadenas fige le miroir, sur le bon chemin comme ailleurs. <span class="desktop-help">Au clavier : N nouveau · R recommencer · T palette · Échap ferme.</span></p>
 
-    <p class="version" id="version">Laser &amp; Miroirs 1.5.0</p>
+    <p class="version" id="version">Laser &amp; Miroirs 1.6.0</p>
     <button id="options-done" class="primary-button" type="button">Fermer</button>
   </dialog>
 

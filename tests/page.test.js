@@ -87,13 +87,27 @@ test('la page respecte le socle mobile et PWA', () => {
   assert.match(page, /width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no/);
   assert.ok(page.includes('id="couleur-barre"'), 'la barre système ne suit pas la palette');
   assert.ok(page.includes('rel="apple-touch-icon" href="assets/icon-180.png"'), 'iOS n’accepte pas le SVG');
-  assert.ok(page.includes("localStorage.getItem('laser-mirror:theme')"), 'la palette n’est pas posée avant le premier rendu');
+  // Avec un passeport, la palette est celle du joueur ; sans, celle de
+  // l'appareil. Les deux chemins visent la même clé.
+  assert.ok(page.includes("getItem('laser-mirror:theme')"), 'la palette n’est pas posée avant le premier rendu');
+  assert.ok(page.includes("Passeport?.stockageJeu('lasers')"), 'le script ignore le passeport');
   assert.ok(page.includes('<script type="module" src="js/app.js">'));
   assert.ok(page.includes(`content="${manifest.theme_color}"`), 'page et manifeste divergent sur la couleur initiale');
   assert.equal(manifest.icons.length, 3);
   for (const icon of manifest.icons) assert.ok(existsSync(join(root, icon.src)), `${icon.src} manque`);
   assert.ok(manifest.orientation, 'le manifeste ne dit pas son orientation');
   assert.ok(manifest.description.length > 80);
+});
+
+test('le passeport est branché à la page et au cache hors ligne', () => {
+  // Sans `data-jeu`, le bandeau s'affiche mais aucun tampon n'est attribué ;
+  // sans les fichiers dans la coquille, la page hors ligne perd l'espace du
+  // joueur.
+  assert.ok(page.includes('data-passeport-ruban data-jeu="laser-mirror"'), 'pas de bandeau');
+  for (const fichier of ['passeport.js', 'liaison.js', 'passeport.css']) {
+    assert.ok(page.includes(`commun/${fichier}`), `${fichier} absent de la page`);
+    assert.ok(worker.includes(`commun/${fichier}`), `${fichier} absent du cache`);
+  }
 });
 
 test('le script inline connaît exactement les palettes disponibles', () => {

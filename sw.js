@@ -3,10 +3,13 @@
 // cache suit la version du jeu, si bien qu'une mise à jour ne conserve jamais
 // un ancien moteur.
 
-const VERSION = 'laser-mirror-1.5.0';
+const VERSION = 'laser-mirror-1.6.0';
 const SHELL = [
   './',
   'index.html',
+  'commun/passeport.js',
+  'commun/liaison.js',
+  'commun/passeport.css',
   'manifest.webmanifest',
   'css/palettes.css',
   'css/board.css',

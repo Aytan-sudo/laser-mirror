@@ -2,6 +2,20 @@
 
 Petit puzzle optique statique pour navigateur. Le laser est visible en permanence : chaque clic fait pivoter un miroir entre `/` et `\`. Le but est d'atteindre le cristal en aussi peu de rotations que possible.
 
+## Version 1.6.0 — Le passeport commun
+
+Ouvert depuis le hub avec un passeport, le jeu range réglages, statistiques et
+puzzle en cours dans l’espace du joueur ; en mode invité, rien ne change. Un
+bandeau rappelle le profil et la consigne du jour.
+
+Le tampon **Logique** récompense l’effort ou la réussite, au premier des deux :
+le cristal atteint le donne tout de suite ; sinon, c’est la vingtième rotation de
+la journée, tous puzzles confondus. Un miroir verrouillé ne compte pas.
+
+Le profil traverse la réécriture d’adresse : recharger la page ne rend plus la
+partie à l’invité. Les liens partagés partent d’une adresse fixe et ne le portent
+jamais.
+
 ## Version 1.5.0
 
 Direction artistique : **le banc d'optique**. Le jeu se jouait sur du papier,
